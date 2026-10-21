@@ -10,6 +10,7 @@ import EmptyState from "../components/EmptyState.vue";
 import FilterChip from "../components/FilterChip.vue";
 import PageState from "../components/PageState.vue";
 import Pager from "../components/Pager.vue";
+import ImportParcelsDialog from "../components/ImportParcelsDialog.vue";
 import Tabs from "../components/Tabs.vue";
 
 const PAGE_SIZE = 12;
@@ -31,6 +32,7 @@ const loading = ref(true);
 const error = ref("");
 const syncing = ref(false);
 const selected = ref([]);
+const importOpen = ref(false);
 
 const SORTS = [
 	["date desc", "Newest"],
@@ -177,6 +179,7 @@ const syncShopify = async () => {
 		<div class="ph">
 			<h1>Orders</h1>
 			<div class="acts">
+				<button class="btn" @click="importOpen = true">Import parcels</button>
 				<button class="btn" :disabled="exporting" @click="exportCsv">Export</button>
 				<button class="btn" :disabled="syncing" @click="syncShopify">
 					<span v-if="syncing" class="spin"></span
@@ -301,5 +304,6 @@ const syncShopify = async () => {
 				</template>
 			</PageState>
 		</section>
+		<ImportParcelsDialog v-if="importOpen" @close="importOpen = false" />
 	</div>
 </template>

@@ -1344,6 +1344,30 @@ def import_commit(file_url: str, courier: str, mapping: dict | str | None = None
 	return importer.run_import("Remittance", file_url, courier, _json(mapping), cint(save_mapping))
 
 
+@frappe.whitelist()
+def parcels_import_preview(file_url: str, courier: str, mapping: dict | str | None = None):
+	"""Dry run of an orders/parcels Excel file (importer.preview_import, type Parcels). Saves nothing. Write role."""
+	_write()
+	from codsync.codsync import importer
+
+	if not courier or not frappe.db.exists("Courier", courier):
+		frappe.throw(_("Choose a courier"))
+	data = importer.preview_import(file_url, "Parcels", courier, _json(mapping))
+	data["all_fields"] = list(importer.ALIASES["Parcels"])
+	return data
+
+
+@frappe.whitelist()
+def parcels_import_commit(file_url: str, courier: str, mapping: dict | str | None = None):
+	"""Upsert COD Parcels from the file (importer.import_parcels). Write role."""
+	_write()
+	from codsync.codsync import importer
+
+	if not courier or not frappe.db.exists("Courier", courier):
+		frappe.throw(_("Choose a courier"))
+	return importer.import_parcels(file_url, courier, _json(mapping))
+
+
 # ---------------------------------------------------------------------------
 # Exceptions (list, detail, resolve)
 # ---------------------------------------------------------------------------

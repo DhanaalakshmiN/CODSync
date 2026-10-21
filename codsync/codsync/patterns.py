@@ -44,7 +44,7 @@ def _features(row):
 	pin = str(row.pincode or "").strip()
 	return {
 		"status": status,
-		"weight_band": _band(flt(weight), WEIGHT_BANDS, WEIGHT_OVER),
+		"weight_band": _band(flt(weight), WEIGHT_BANDS, WEIGHT_OVER) if flt(weight) > 0 else None,
 		"amount_band": _band(flt(amount), AMOUNT_BANDS, AMOUNT_OVER),
 		"zone": pin[:3] if len(pin) >= 3 else None,
 	}
