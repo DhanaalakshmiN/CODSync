@@ -1,7 +1,7 @@
 app_name = "codsync"
-app_title = "Codsync"
+app_title = "CODSync"
 app_publisher = "Dhanaa Lakshmi"
-app_description = "Reconcile courier COD payouts with shipment records."
+app_description = "Reconcile courier COD payouts with shipment records and identify paid, short-paid, missing, or unknown payments."
 app_email = "dhanaalakshminarayanan@gmail.com"
 app_license = "mit"
 
@@ -26,8 +26,8 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/codsync/css/codsync.css"
-# app_include_js = "/assets/codsync/js/codsync.js"
-
+app_include_js = "/assets/codsync/js/import_dialog.js"
+after_request = ["codsync.shopify_frame.allow_shopify_frame"]
 # include js, css files in header of web template
 # web_include_css = "/assets/codsync/css/codsync.css"
 # web_include_js = "/assets/codsync/js/codsync.js"
@@ -155,23 +155,21 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"codsync.tasks.all"
-# 	],
-# 	"daily": [
-# 		"codsync.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"codsync.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"codsync.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"codsync.tasks.monthly"
-# 	],
-# }
+# COD Ledger single page app: /cod-ledger and every sub path render www/cod-ledger.html
+website_route_rules = [
+	{"from_route": "/cod-ledger/<path:app_path>", "to_route": "cod-ledger"},
+]
+
+scheduler_events = {
+	"hourly": [
+		"codsync.codsync.tracking.run_hourly_tracking",
+		"codsync.codsync.engine.run_hourly_settlement_sync",
+	],
+	"daily": [
+		"codsync.codsync.tasks.run_daily_mark_missing",
+		"codsync.codsync.tasks.run_daily_reconciliation",
+	],
+}
 
 # Testing
 # -------
