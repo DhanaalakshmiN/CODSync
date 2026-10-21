@@ -1,0 +1,131 @@
+{
+ "creation": "2026-10-09 00:00:00",
+ "docstatus": 0,
+ "idx": 0,
+ "modified": "2026-10-09 12:00:00",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "module": "CODSync",
+ "doctype": "Workspace",
+ "name": "CODSync",
+ "label": "CODSync",
+ "title": "CODSync",
+ "type": "Workspace",
+ "public": 1,
+ "standard": 1,
+ "is_hidden": 0,
+ "hide_custom": 0,
+ "for_user": "",
+ "icon": "truck",
+ "indicator_color": "blue",
+ "sequence_id": 1.0,
+ "content": "[{\"id\": \"nc0\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"COD Parcels\", \"col\": 4}}, {\"id\": \"nc1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"COD Collected\", \"col\": 4}}, {\"id\": \"nc2\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Payout Received\", \"col\": 4}}, {\"id\": \"nc3\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Courier Owes\", \"col\": 4}}, {\"id\": \"nc4\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Short-paid Parcels\", \"col\": 4}}, {\"id\": \"nc5\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Unmatched Payout Lines\", \"col\": 4}}, {\"id\": \"ch0\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Owed by Courier\", \"col\": 6}}, {\"id\": \"ch1\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Payout Status\", \"col\": 6}}, {\"id\": \"sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Courier\", \"col\": 3}}, {\"id\": \"sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"COD Parcel\", \"col\": 3}}, {\"id\": \"sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Courier Remittance\", \"col\": 3}}, {\"id\": \"sc10\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"COD Exception\", \"col\": 3}}, {\"id\": \"sc11\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CODSync Settings\", \"col\": 3}}, {\"id\": \"rp0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payout Reconciliation\", \"col\": 3}}, {\"id\": \"rp1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Courier Outstanding\", \"col\": 3}}, {\"id\": \"rp2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"COD Aging\", \"col\": 3}}, {\"id\": \"rp3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Unmatched Payout Lines\", \"col\": 3}}]",
+ "links": [],
+ "custom_blocks": [],
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "CODSync Manager"
+  },
+  {
+   "role": "CODSync Operator"
+  },
+  {
+   "role": "CODSync Viewer"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "number_cards": [
+  {
+   "label": "COD Parcels",
+   "number_card_name": "COD Parcels"
+  },
+  {
+   "label": "COD Collected",
+   "number_card_name": "COD Collected"
+  },
+  {
+   "label": "Payout Received",
+   "number_card_name": "Payout Received"
+  },
+  {
+   "label": "Courier Owes",
+   "number_card_name": "Courier Owes"
+  },
+  {
+   "label": "Short-paid Parcels",
+   "number_card_name": "Short-paid Parcels"
+  },
+  {
+   "label": "Unmatched Payout Lines",
+   "number_card_name": "Unmatched Payout Lines"
+  }
+ ],
+ "charts": [
+  {
+   "label": "Owed by Courier",
+   "chart_name": "Owed by Courier"
+  },
+  {
+   "label": "Payout Status",
+   "chart_name": "Payout Status"
+  }
+ ],
+ "shortcuts": [
+  {
+   "label": "Courier",
+   "link_to": "Courier",
+   "type": "DocType",
+   "doc_view": "List"
+  },
+  {
+   "label": "COD Parcel",
+   "link_to": "COD Parcel",
+   "type": "DocType",
+   "doc_view": "List"
+  },
+  {
+   "label": "Courier Remittance",
+   "link_to": "Courier Remittance",
+   "type": "DocType",
+   "doc_view": "List"
+  },
+  {
+   "label": "COD Exception",
+   "link_to": "COD Exception",
+   "type": "DocType",
+   "doc_view": "List"
+  },
+  {
+   "label": "Store Connection",
+   "link_to": "Store Connection",
+   "type": "DocType"
+  },
+  {
+   "label": "Payout Reconciliation",
+   "link_to": "Payout Reconciliation",
+   "type": "Report",
+   "report_ref_doctype": "COD Parcel"
+  },
+  {
+   "label": "Courier Outstanding",
+   "link_to": "Courier Outstanding",
+   "type": "Report",
+   "report_ref_doctype": "COD Parcel"
+  },
+  {
+   "label": "COD Aging",
+   "link_to": "COD Aging",
+   "type": "Report",
+   "report_ref_doctype": "COD Parcel"
+  },
+  {
+   "label": "Unmatched Payout Lines",
+   "link_to": "Unmatched Payout Lines",
+   "type": "Report",
+   "report_ref_doctype": "Courier Remittance"
+  }
+ ]
+}
