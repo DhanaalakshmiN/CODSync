@@ -1,0 +1,217 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:remittance_id",
+ "creation": "2026-10-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "batch_section",
+  "courier",
+  "remittance_id",
+  "col_break_batch",
+  "remittance_date",
+  "utr_number",
+  "source_section",
+  "source",
+  "col_break_source",
+  "file_name",
+  "totals_section",
+  "total_cod",
+  "total_deductions",
+  "total_net_paid",
+  "col_break_totals",
+  "orders_count",
+  "batch_status",
+  "lines_section",
+  "lines"
+ ],
+ "fields": [
+  {
+   "fieldname": "batch_section",
+   "fieldtype": "Section Break",
+   "label": "Batch"
+  },
+  {
+   "fieldname": "courier",
+   "fieldtype": "Link",
+   "label": "Courier",
+   "options": "Courier",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "remittance_id",
+   "fieldtype": "Data",
+   "label": "Remittance ID",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_batch",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remittance_date",
+   "fieldtype": "Date",
+   "label": "Remittance Date",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "utr_number",
+   "fieldtype": "Data",
+   "label": "UTR Number",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "source_section",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "\nExcel\nAPI",
+   "default": "Excel",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_source",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "file_name",
+   "fieldtype": "Data",
+   "label": "File Name"
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_cod",
+   "fieldtype": "Currency",
+   "label": "Total COD",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_deductions",
+   "fieldtype": "Currency",
+   "label": "Total Deductions",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_net_paid",
+   "fieldtype": "Currency",
+   "label": "Total Net Paid",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_totals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "orders_count",
+   "fieldtype": "Int",
+   "label": "Orders Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "batch_status",
+   "fieldtype": "Select",
+   "label": "Batch Status",
+   "options": "\nReconciled\nMismatch\nPending review",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "lines_section",
+   "fieldtype": "Section Break",
+   "label": "Lines"
+  },
+  {
+   "fieldname": "lines",
+   "fieldtype": "Table",
+   "label": "Lines",
+   "options": "Remittance Line"
+  }
+ ],
+ "is_submittable": 1,
+ "issingle": 0,
+ "links": [],
+ "modified": "2026-10-13 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "CODSync",
+ "name": "Courier Remittance",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Operator",
+   "share": 0,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Viewer",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "remittance_id",
+ "track_changes": 1
+}

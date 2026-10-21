@@ -1,0 +1,345 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:order_id",
+ "creation": "2026-10-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "order_section",
+  "order_id",
+  "order_date",
+  "col_break_order",
+  "platform",
+  "external_id",
+  "order_status",
+  "customer_section",
+  "customer_name",
+  "phone",
+  "email",
+  "col_break_customer",
+  "address",
+  "city",
+  "pincode",
+  "payment_section",
+  "payment_mode",
+  "order_total",
+  "col_break_payment",
+  "cod_amount",
+  "shipment_section",
+  "courier",
+  "awb",
+  "status",
+  "col_break_shipment",
+  "declared_weight",
+  "charged_weight",
+  "delivered_date",
+  "last_event",
+  "last_event_at",
+  "settlement_section",
+  "payout_status",
+  "settlement_batch",
+  "col_break_settlement",
+  "expected_settlement",
+  "actual_settlement",
+  "difference",
+  "tracking_section",
+  "tracking_events"
+ ],
+ "fields": [
+  {
+   "fieldname": "order_section",
+   "fieldtype": "Section Break",
+   "label": "Order"
+  },
+  {
+   "fieldname": "order_id",
+   "fieldtype": "Data",
+   "label": "Order ID",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "order_date",
+   "fieldtype": "Datetime",
+   "label": "Order Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_order",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "platform",
+   "fieldtype": "Select",
+   "label": "Platform",
+   "options": "\nShopify\nWooCommerce\nOdoo\nExcel\nManual",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "external_id",
+   "fieldtype": "Data",
+   "label": "External ID",
+   "description": "Order ID on the platform"
+  },
+  {
+   "fieldname": "order_status",
+   "fieldtype": "Select",
+   "label": "Order Status",
+   "options": "\nUnfulfilled\nFulfilled\nReturned\nCancelled",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "customer_section",
+   "fieldtype": "Section Break",
+   "label": "Customer"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "col_break_customer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "pincode",
+   "fieldtype": "Data",
+   "label": "Pincode"
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment"
+  },
+  {
+   "fieldname": "payment_mode",
+   "fieldtype": "Select",
+   "label": "Payment Mode",
+   "options": "\nCOD\nPrepaid",
+   "default": "COD",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "order_total",
+   "fieldtype": "Currency",
+   "label": "Order Total"
+  },
+  {
+   "fieldname": "col_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cod_amount",
+   "fieldtype": "Currency",
+   "label": "COD Amount",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "shipment_section",
+   "fieldtype": "Section Break",
+   "label": "Shipment"
+  },
+  {
+   "fieldname": "courier",
+   "fieldtype": "Link",
+   "label": "Courier",
+   "options": "Courier",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "awb",
+   "fieldtype": "Data",
+   "label": "AWB",
+   "unique": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nBooked\nIn Transit\nDelivered\nRTO\nCancelled",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_shipment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "declared_weight",
+   "fieldtype": "Float",
+   "label": "Declared Weight",
+   "description": "Kilograms"
+  },
+  {
+   "fieldname": "charged_weight",
+   "fieldtype": "Float",
+   "label": "Charged Weight",
+   "description": "Kilograms, as billed by the courier"
+  },
+  {
+   "fieldname": "delivered_date",
+   "fieldtype": "Date",
+   "label": "Delivered Date"
+  },
+  {
+   "fieldname": "last_event",
+   "fieldtype": "Data",
+   "label": "Last Event",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_event_at",
+   "fieldtype": "Datetime",
+   "label": "Last Event At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "settlement_section",
+   "fieldtype": "Section Break",
+   "label": "Settlement"
+  },
+  {
+   "fieldname": "payout_status",
+   "fieldtype": "Select",
+   "label": "Payout Status",
+   "options": "Not due\nAwaiting payout\nPaid\nShort-paid\nMissing\nUnknown",
+   "default": "Not due",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "settlement_batch",
+   "fieldtype": "Link",
+   "label": "Settlement Batch",
+   "options": "Courier Remittance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_settlement",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expected_settlement",
+   "fieldtype": "Currency",
+   "label": "Expected Settlement",
+   "read_only": 1
+  },
+  {
+   "fieldname": "actual_settlement",
+   "fieldtype": "Currency",
+   "label": "Actual Settlement",
+   "read_only": 1
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Currency",
+   "label": "Difference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Tracking",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "tracking_events",
+   "fieldtype": "Table",
+   "label": "Tracking Events",
+   "options": "Tracking Event"
+  }
+ ],
+ "issingle": 0,
+ "links": [],
+ "modified": "2026-10-13 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "CODSync",
+ "name": "COD Parcel",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Operator",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Viewer",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "order_id",
+ "track_changes": 1
+}

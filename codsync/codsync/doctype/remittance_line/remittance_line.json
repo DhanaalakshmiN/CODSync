@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "shipment_section",
+  "row_no",
+  "awb",
+  "col_break_shipment",
+  "cod_parcel",
+  "match_status",
+  "charges_section",
+  "cod_amount",
+  "freight",
+  "cod_fee",
+  "gst",
+  "col_break_charges",
+  "rto_charge",
+  "weight_charge",
+  "other_charge",
+  "charged_weight",
+  "result_section",
+  "net_paid",
+  "col_break_result",
+  "expected_net",
+  "difference"
+ ],
+ "fields": [
+  {
+   "fieldname": "shipment_section",
+   "fieldtype": "Section Break",
+   "label": "Shipment"
+  },
+  {
+   "fieldname": "row_no",
+   "fieldtype": "Int",
+   "label": "Row No"
+  },
+  {
+   "fieldname": "awb",
+   "fieldtype": "Data",
+   "label": "AWB",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col_break_shipment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cod_parcel",
+   "fieldtype": "Link",
+   "label": "COD Parcel",
+   "options": "COD Parcel",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "match_status",
+   "fieldtype": "Select",
+   "label": "Match Status",
+   "options": "\nPaid\nShort-paid\nUnknown",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "charges_section",
+   "fieldtype": "Section Break",
+   "label": "Charges"
+  },
+  {
+   "fieldname": "cod_amount",
+   "fieldtype": "Currency",
+   "label": "COD Amount",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "freight",
+   "fieldtype": "Currency",
+   "label": "Freight"
+  },
+  {
+   "fieldname": "cod_fee",
+   "fieldtype": "Currency",
+   "label": "COD Fee"
+  },
+  {
+   "fieldname": "gst",
+   "fieldtype": "Currency",
+   "label": "GST"
+  },
+  {
+   "fieldname": "col_break_charges",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rto_charge",
+   "fieldtype": "Currency",
+   "label": "RTO Charge"
+  },
+  {
+   "fieldname": "weight_charge",
+   "fieldtype": "Currency",
+   "label": "Weight Charge"
+  },
+  {
+   "fieldname": "other_charge",
+   "fieldtype": "Currency",
+   "label": "Other Charge"
+  },
+  {
+   "fieldname": "charged_weight",
+   "fieldtype": "Float",
+   "label": "Charged Weight",
+   "description": "Kilograms, as billed by the courier"
+  },
+  {
+   "fieldname": "result_section",
+   "fieldtype": "Section Break",
+   "label": "Result"
+  },
+  {
+   "fieldname": "net_paid",
+   "fieldtype": "Currency",
+   "label": "Net Paid",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col_break_result",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expected_net",
+   "fieldtype": "Currency",
+   "label": "Expected Net",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Currency",
+   "label": "Difference",
+   "read_only": 1,
+   "in_list_view": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-13 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "CODSync",
+ "name": "Remittance Line",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

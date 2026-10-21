@@ -1,0 +1,275 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "EXC-.####",
+ "creation": "2026-10-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "exception_section",
+  "exception_type",
+  "status",
+  "col_break_exception",
+  "cod_parcel",
+  "awb",
+  "courier",
+  "settlement_batch",
+  "amounts_section",
+  "expected",
+  "actual",
+  "col_break_amounts",
+  "impact",
+  "detail_section",
+  "detail",
+  "line_ref",
+  "col_break_detail",
+  "unexpected_label",
+  "resolution_section",
+  "resolution",
+  "resolution_note",
+  "assignee",
+  "col_break_resolution",
+  "opened_on",
+  "resolved_on",
+  "dispute_section",
+  "claim_amount",
+  "dispute_status",
+  "col_break_dispute",
+  "dispute_raised_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "exception_section",
+   "fieldtype": "Section Break",
+   "label": "Exception"
+  },
+  {
+   "fieldname": "exception_type",
+   "fieldtype": "Select",
+   "label": "Exception Type",
+   "options": "Unexpected deduction\nAmount mismatch\nMissing settlement\nMissing AWB\nTracking mismatch\nUnknown AWB\nDuplicate AWB",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nOpen\nResolved",
+   "default": "Open",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_exception",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cod_parcel",
+   "fieldtype": "Link",
+   "label": "COD Parcel",
+   "options": "COD Parcel",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "awb",
+   "fieldtype": "Data",
+   "label": "AWB",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "courier",
+   "fieldtype": "Link",
+   "label": "Courier",
+   "options": "Courier",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "settlement_batch",
+   "fieldtype": "Link",
+   "label": "Settlement Batch",
+   "options": "Courier Remittance",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "amounts_section",
+   "fieldtype": "Section Break",
+   "label": "Amounts"
+  },
+  {
+   "fieldname": "expected",
+   "fieldtype": "Currency",
+   "label": "Expected"
+  },
+  {
+   "fieldname": "actual",
+   "fieldtype": "Currency",
+   "label": "Actual"
+  },
+  {
+   "fieldname": "col_break_amounts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "impact",
+   "fieldtype": "Currency",
+   "label": "Impact",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "detail_section",
+   "fieldtype": "Section Break",
+   "label": "Detail"
+  },
+  {
+   "fieldname": "detail",
+   "fieldtype": "Small Text",
+   "label": "Detail",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "line_ref",
+   "fieldtype": "Data",
+   "label": "Line Ref"
+  },
+  {
+   "fieldname": "col_break_detail",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "unexpected_label",
+   "fieldtype": "Data",
+   "label": "Unexpected Charge",
+   "description": "e.g. Weight discrepancy charge"
+  },
+  {
+   "fieldname": "resolution_section",
+   "fieldtype": "Section Break",
+   "label": "Resolution"
+  },
+  {
+   "fieldname": "resolution",
+   "fieldtype": "Select",
+   "label": "Resolution",
+   "options": "\nRaise dispute\nAccept deduction\nMatch to another line\nResolved manually",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "resolution_note",
+   "fieldtype": "Small Text",
+   "label": "Resolution Note"
+  },
+  {
+   "fieldname": "assignee",
+   "fieldtype": "Link",
+   "label": "Assignee",
+   "options": "User",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_resolution",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "opened_on",
+   "fieldtype": "Datetime",
+   "label": "Opened On",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolved On"
+  },
+  {
+   "fieldname": "dispute_section",
+   "fieldtype": "Section Break",
+   "label": "Dispute",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "claim_amount",
+   "fieldtype": "Currency",
+   "label": "Claim Amount"
+  },
+  {
+   "fieldname": "dispute_status",
+   "fieldtype": "Select",
+   "label": "Dispute Status",
+   "options": "Not raised\nRaised with Courier\nResolved\nRejected",
+   "default": "Not raised",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_dispute",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "dispute_raised_on",
+   "fieldtype": "Date",
+   "label": "Dispute Raised On"
+  }
+ ],
+ "issingle": 0,
+ "links": [],
+ "modified": "2026-10-13 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "CODSync",
+ "name": "COD Exception",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Operator",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Viewer",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
