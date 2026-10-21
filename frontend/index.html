@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>COD Ledger</title>
+  </head>
+  <body>
+    <!-- dev only: in production www/cod-ledger.html injects window.CODSYNC (with the real csrf_token); in dev api.js fetches it -->
+    <script>window.CODSYNC = window.CODSYNC || { dev: true, user: "Administrator", site: "codsync.localhost" };</script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
