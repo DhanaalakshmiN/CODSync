@@ -16,7 +16,12 @@ frappe.ui.form.on("Store Connection", {
 				const c = r.message || {};
 				frappe.msgprint(
 					__("Fetched {0}, COD {1}, created {2}, updated {3}, skipped {4}, failed {5}", [
-						c.fetched, c.cod, c.created, c.updated, c.skipped, c.failed,
+						c.fetched,
+						c.cod,
+						c.created,
+						c.updated,
+						c.skipped,
+						c.failed,
 					])
 				);
 				frm.reload_doc();

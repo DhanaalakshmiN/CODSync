@@ -9,8 +9,10 @@ frappe.ui.form.on("Courier", {
 				callback(r) {
 					const { checked, updated, failed } = r.message;
 					frappe.msgprint({
-						message: __("Tracking sync for {0}: {1} checked, {2} updated, {3} failed.",
-							[frm.doc.name, checked, updated, failed]),
+						message: __(
+							"Tracking sync for {0}: {1} checked, {2} updated, {3} failed.",
+							[frm.doc.name, checked, updated, failed]
+						),
 						indicator: failed ? "red" : "green",
 					});
 					frm.reload_doc();

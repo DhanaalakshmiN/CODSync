@@ -1,6 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import now_datetime, today, flt
+from frappe.utils import flt, now_datetime, today
 
 
 class CODException(Document):
