@@ -23,7 +23,7 @@ from frappe.utils import (
 	pretty_date,
 )
 
-from codsync.codsync import engine
+from codsync.codsync import engine, patterns
 from codsync.codsync.platforms import get_platform
 
 READ_ROLES = ("CODSync Manager", "CODSync Operator", "CODSync Viewer", "System Manager")
@@ -1065,18 +1065,26 @@ def reconciliation(
 	courier: str | None = None,
 	batch: str | None = None,
 	difference_not_zero: int = 0,
+	parcels: list | str | None = None,
 	search: str | None = None,
 	sort: str = "order_id desc",
 	page: int = 1,
 	page_size: int = 12,
 ):
-	"""Reconciliation table: COD parcels with expected vs actual settlement."""
+	"""Reconciliation table: COD parcels with expected vs actual settlement. `parcels`
+	(a list or comma-separated order ids) restricts the table to those orders."""
 	_read()
 	base = [p for p in _orders(courier) if _is_cod(p) and p.delivery_status != "Cancelled"]
 	if batch:
 		base = [p for p in base if p.settlement_batch == batch]
 	if cint(difference_not_zero):
 		base = [p for p in base if abs(flt(p.difference)) > 0]
+	ids = _json(parcels)
+	if isinstance(ids, str):
+		ids = [x.strip() for x in ids.split(",") if x.strip()]
+	if ids:
+		only = set(ids)
+		base = [p for p in base if p.name in only]
 
 	counts = {"All": len(base)}
 	cards = []
@@ -1126,6 +1134,13 @@ def reconciliation(
 	result["cards"] = cards
 	result["stats"] = {"net_difference": flt(sum(flt(p.difference) for p in base), 2)}
 	return result
+
+
+@frappe.whitelist()
+def deduction_patterns(courier: str | None = None, from_date: str | None = None, to_date: str | None = None):
+	"""Repeating unexplained deductions (patterns.get_deduction_patterns). Read role."""
+	_read()
+	return patterns.get_deduction_patterns(courier=courier, from_date=from_date, to_date=to_date)
 
 
 BATCH_STATUSES = ("Reconciled", "Mismatch", "Pending review")
