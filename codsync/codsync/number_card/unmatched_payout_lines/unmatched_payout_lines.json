@@ -1,0 +1,21 @@
+{
+ "creation": "2026-10-09 00:00:00",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Remittance Line",
+ "filters_json": "[[\"Remittance Line\", \"match_status\", \"=\", \"Unknown\"]]",
+ "function": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Unmatched Payout Lines",
+ "modified": "2026-10-09 00:00:00",
+ "modified_by": "Administrator",
+ "module": "CODSync",
+ "name": "Unmatched Payout Lines",
+ "owner": "Administrator",
+ "show_percentage_stats": 1,
+ "stats_time_interval": "Daily",
+ "type": "Document Type",
+ "parent_document_type": "Courier Remittance"
+}
