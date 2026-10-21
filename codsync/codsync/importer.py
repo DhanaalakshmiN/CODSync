@@ -87,8 +87,21 @@ ALIASES = {
 		"status": ["status", "shipment status", "delivery status"],
 		"delivered_date": ["delivered date", "delivery date", "delivered on"],
 		"order_date": ["order date", "created at", "ordered on"],
-		"declared_weight": ["declared weight", "weight", "applied weight"],
-		"charged_weight": ["charged weight", "charge weight", "billed weight"],
+		"declared_weight": [
+			"declared weight",
+			"declared weight kg",
+			"weight",
+			"weight kg",
+			"applied weight",
+		],
+		"charged_weight": [
+			"charged weight",
+			"charged weight kg",
+			"charge weight",
+			"billed weight",
+			"chargeable weight",
+			"chargeable weight kg",
+		],
 	},
 	"Remittance": {
 		"remittance_id": ["remittance id", "remittance no", "remittance number", "settlement id", "batch id"],
@@ -131,7 +144,8 @@ ALIASES = {
 	},
 }
 
-PARCEL_NUMERIC = ("cod_amount", "order_total", "declared_weight", "charged_weight")
+PARCEL_NUMERIC = ("cod_amount", "order_total")
+PARCEL_WEIGHTS = ("declared_weight", "charged_weight")
 REMITTANCE_NUMERIC = (
 	"cod_amount",
 	"freight_charge",
@@ -279,6 +293,15 @@ def build_mapping(headers, import_type, courier=None, explicit=None):
 	return out
 
 
+def _as_mapping(value):
+	"""Accept a dict, a JSON string or None; return a dict (or list) for the mapping argument."""
+	if value is None or value == "":
+		return {}
+	if isinstance(value, str):
+		return frappe.parse_json(value) or {}
+	return value
+
+
 def _load(file_url, import_type, courier=None, mapping_template=None):
 	"""Return (mapping, rows) where rows = [(excel_row_no, {field: str})] and unmapped columns are dropped."""
 	raw = _read_raw(file_url)
@@ -305,11 +328,10 @@ def read_rows(file_url, mapping_template=None, courier=None, import_type="Parcel
 
 
 @frappe.whitelist()
-def save_mapping(courier: str, import_type: str, mapping: dict | str):
+def save_mapping(courier: str, import_type: str, mapping: dict | list | str):
 	"""Save a {file header: standard field} mapping JSON on the Courier."""
 	_check_roles()
-	if isinstance(mapping, str):
-		mapping = json.loads(mapping)
+	mapping = _as_mapping(mapping)
 	if isinstance(mapping, list):
 		mapping = {m.get("header") or m.get("file_column"): m.get("field") for m in mapping if m.get("field")}
 	fieldname = "parcels_mapping" if import_type == "Parcels" else "remittance_mapping"
@@ -367,6 +389,12 @@ def check_parcel_row(row, default_courier, couriers):
 	v = {"order_id": order_id, "awb": awb or None}
 	for f in PARCEL_NUMERIC:
 		v[f] = _num(row, f, errors, negative_ok=False)
+	for f in PARCEL_WEIGHTS:  # blank or non-numeric means "no weight", never an error
+		try:
+			w = float(clean(row.get(f)).replace(",", ""))
+		except ValueError:
+			w = None
+		v[f] = w if w is not None and w > 0 else None
 	v["delivered_date"] = _date(row, "delivered_date", errors)
 	v["order_date"] = _date(row, "order_date", errors, as_datetime=True)
 
@@ -466,9 +494,10 @@ def _line_detail(idx, v, errs, bid, seen_awbs, parcel_idx):
 
 @frappe.whitelist()
 def preview_import(
-	file_url: str, import_type: str, courier: str | None = None, mapping_template: str | None = None
+	file_url: str, import_type: str, courier: str | None = None, mapping_template: str | dict | None = None
 ):
 	"""Dry run: headers, mapping, first rows, valid / invalid counts with reasons. Saves nothing."""
+	mapping_template = _as_mapping(mapping_template)
 	_check_roles()
 	if import_type not in ALIASES:
 		frappe.throw(_("Import type must be Parcels or Remittance"))
@@ -623,17 +652,14 @@ UPDATABLE = (
 
 
 def _upsert_parcel(v):
-	"""Create or update one COD Parcel. Existing awb / courier are filled only when empty; status is kept."""
+	"""Create one COD Parcel; for an existing order id only empty weights are backfilled."""
 	name = v["order_id"]
 	if frappe.db.exists("COD Parcel", name):
 		doc = frappe.get_doc("COD Parcel", name)
-		for f in UPDATABLE:
-			if v.get(f) not in (None, "", 0, 0.0):
+		# an existing parcel is only backfilled: weights are filled when currently 0 or empty
+		for f in PARCEL_WEIGHTS:
+			if v.get(f) and not flt(doc.get(f)):
 				doc.set(f, v[f])
-		if v.get("awb") and not doc.awb:
-			doc.awb = v["awb"]
-		if v.get("courier") and not doc.courier:
-			doc.courier = v["courier"]
 		doc.save()
 		return "updated"
 	if v.get("awb"):
@@ -657,8 +683,9 @@ def _upsert_parcel(v):
 
 
 @frappe.whitelist()
-def import_parcels(file_url: str, courier: str | None = None, mapping_template: str | None = None):
+def import_parcels(file_url: str, courier: str | None = None, mapping_template: str | dict | None = None):
 	"""Upsert COD Parcels by order id (platform Excel, payment mode COD unless the file says Prepaid)."""
+	mapping_template = _as_mapping(mapping_template)
 	_check_roles()
 	try:
 		_mapping, rows = _load(file_url, "Parcels", courier, mapping_template)
@@ -702,8 +729,9 @@ def import_parcels(file_url: str, courier: str | None = None, mapping_template: 
 
 
 @frappe.whitelist()
-def import_remittance(file_url: str, courier: str, mapping_template: str | None = None):
+def import_remittance(file_url: str, courier: str, mapping_template: str | dict | None = None):
 	"""Create + submit one Courier Remittance per remittance id, then run matching on each."""
+	mapping_template = _as_mapping(mapping_template)
 	_check_roles()
 	from codsync.codsync.matching import run_matching
 
@@ -816,11 +844,12 @@ def run_import(
 	import_type: str,
 	file_url: str,
 	courier: str | None = None,
-	mapping_template: str | None = None,
+	mapping_template: str | dict | None = None,
 	save_mapping_back: int = 0,
 ):
 	"""Confirm step of the dialog. Optionally saves the detected mapping on the Courier first;
 	large files are queued and finish with a codsync_import_done realtime event."""
+	mapping_template = _as_mapping(mapping_template)
 	_check_roles()
 	if import_type not in ALIASES:
 		frappe.throw(_("Import type must be Parcels or Remittance"))
