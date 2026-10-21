@@ -4,7 +4,7 @@ from frappe.utils import add_days, flt, getdate, nowdate
 
 
 @frappe.whitelist()
-def run_matching(remittance):
+def run_matching(remittance: str):
 	"""Match a Courier Remittance's lines to COD Parcels by AWB (idempotent).
 
 	Returns {"matched", "short-paid", "unknown", "exceptions"} and writes one

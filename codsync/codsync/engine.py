@@ -448,7 +448,7 @@ def reconcile_remittance(remittance_name):
 
 
 @frappe.whitelist()
-def raise_dispute(parcel):
+def raise_dispute(parcel: str):
 	"""Open (or reuse) the parcel's COD Exception and mark the dispute as raised. Write role."""
 	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator"))
 	doc = frappe.get_doc("COD Parcel", parcel)
@@ -478,7 +478,7 @@ def raise_dispute(parcel):
 
 
 @frappe.whitelist()
-def add_note(order_id, text):
+def add_note(order_id: str, text: str):
 	"""Add a note (Comment) to the parcel named by this order id."""
 	doc = frappe.get_doc("COD Parcel", order_id)
 	doc.add_comment("Comment", text)
@@ -497,7 +497,7 @@ def _act(kind, title, detail, when, ref_doctype=None, ref_name=None):
 
 
 @frappe.whitelist()
-def timeline(parcel):
+def timeline(parcel: str):
 	"""Build the order timeline (oldest first) from the parcel and related records."""
 	doc = frappe.get_doc("COD Parcel", parcel)
 	out = []
@@ -657,7 +657,7 @@ def reconciliation_status(p, open_exception_types=()):
 
 
 @frappe.whitelist()
-def statuses(parcel):
+def statuses(parcel: str):
 	"""delivery / COD / reconciliation status of one parcel."""
 	doc = frappe.get_doc("COD Parcel", parcel).as_dict()
 	open_types = frappe.get_all(

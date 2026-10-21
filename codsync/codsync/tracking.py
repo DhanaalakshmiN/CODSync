@@ -173,7 +173,7 @@ def get_adapter(courier):
 
 
 @frappe.whitelist()
-def update_parcel_tracking(parcel):
+def update_parcel_tracking(parcel: str):
 	"""Fetch tracking events and append only NEW ones (dedupe on event_time+status).
 
 	Updates parcel status and delivered_date. Never touches payout_status.
@@ -225,7 +225,7 @@ def update_parcel_tracking(parcel):
 
 
 @frappe.whitelist()
-def sync_tracking(courier=None, parcel=None):
+def sync_tracking(courier: str | None = None, parcel: str | None = None):
 	"""Manually refresh tracking for one COD Parcel or all of a Courier's active parcels.
 
 	Returns {"checked", "updated", "failed"} and writes one Sync Log row
