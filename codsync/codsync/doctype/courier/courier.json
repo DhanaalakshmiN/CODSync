@@ -1,0 +1,297 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:courier_name",
+ "creation": "2026-10-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "courier_section",
+  "courier_name",
+  "is_active",
+  "col_break_courier",
+  "payout_cycle_days",
+  "connection_status",
+  "charges_section",
+  "cod_fee_percent",
+  "gst_percent",
+  "col_break_charges",
+  "base_weight_kg",
+  "base_freight",
+  "additional_freight_per_kg",
+  "tracking_section",
+  "tracking_provider",
+  "api_key",
+  "col_break_tracking",
+  "tracking_sync_enabled",
+  "tracking_interval_min",
+  "settlement_section",
+  "settlement_via",
+  "col_break_settlement",
+  "settlement_sync_enabled",
+  "settlement_sync_time",
+  "status_section",
+  "last_tracking_sync",
+  "last_settlement_sync",
+  "col_break_status",
+  "last_error",
+  "import_mapping_section",
+  "parcels_mapping",
+  "col_break_import_mapping",
+  "remittance_mapping"
+ ],
+ "fields": [
+  {
+   "fieldname": "courier_section",
+   "fieldtype": "Section Break",
+   "label": "Courier"
+  },
+  {
+   "fieldname": "courier_name",
+   "fieldtype": "Data",
+   "label": "Courier Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active",
+   "default": "1",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_courier",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payout_cycle_days",
+   "fieldtype": "Int",
+   "label": "Payout Cycle Days",
+   "default": "7"
+  },
+  {
+   "fieldname": "connection_status",
+   "fieldtype": "Select",
+   "label": "Connection Status",
+   "options": "\nConnected\nAction needed\nSyncing\nNot connected",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "charges_section",
+   "fieldtype": "Section Break",
+   "label": "Expected Charges",
+   "description": "Expected settlement = COD Amount - COD fee - freight - GST"
+  },
+  {
+   "fieldname": "cod_fee_percent",
+   "fieldtype": "Float",
+   "label": "COD Fee Percent",
+   "description": "Percent of COD Amount"
+  },
+  {
+   "fieldname": "gst_percent",
+   "fieldtype": "Float",
+   "label": "GST Percent",
+   "default": "0",
+   "description": "Percent of COD fee + freight"
+  },
+  {
+   "fieldname": "col_break_charges",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "base_weight_kg",
+   "fieldtype": "Float",
+   "label": "Base Weight (kg)",
+   "default": "0.5",
+   "description": "Freight is the base rate up to this weight"
+  },
+  {
+   "fieldname": "base_freight",
+   "fieldtype": "Currency",
+   "label": "Base Freight"
+  },
+  {
+   "fieldname": "additional_freight_per_kg",
+   "fieldtype": "Currency",
+   "label": "Additional Freight Per Kg",
+   "description": "Added for each kg above the base weight"
+  },
+  {
+   "fieldname": "tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Tracking"
+  },
+  {
+   "fieldname": "tracking_provider",
+   "fieldtype": "Select",
+   "label": "Tracking Provider",
+   "options": "Mock\nShip24",
+   "default": "Mock"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "col_break_tracking",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tracking_sync_enabled",
+   "fieldtype": "Check",
+   "label": "Tracking Sync Enabled"
+  },
+  {
+   "fieldname": "tracking_interval_min",
+   "fieldtype": "Int",
+   "label": "Tracking Interval (min)",
+   "default": "30"
+  },
+  {
+   "fieldname": "settlement_section",
+   "fieldtype": "Section Break",
+   "label": "Settlement"
+  },
+  {
+   "fieldname": "settlement_via",
+   "fieldtype": "Select",
+   "label": "Settlement Via",
+   "options": "\nAPI\nExcel",
+   "default": "Excel",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "col_break_settlement",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "settlement_sync_enabled",
+   "fieldtype": "Check",
+   "label": "Settlement Sync Enabled"
+  },
+  {
+   "fieldname": "settlement_sync_time",
+   "fieldtype": "Time",
+   "label": "Settlement Sync Time",
+   "default": "09:00:00"
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "last_tracking_sync",
+   "fieldtype": "Datetime",
+   "label": "Last Tracking Sync",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_settlement_sync",
+   "fieldtype": "Datetime",
+   "label": "Last Settlement Sync",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last Error",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_mapping_section",
+   "fieldtype": "Section Break",
+   "label": "Import Mapping",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "parcels_mapping",
+   "fieldtype": "Code",
+   "label": "Parcels Mapping",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "col_break_import_mapping",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remittance_mapping",
+   "fieldtype": "Code",
+   "label": "Remittance Mapping",
+   "options": "JSON"
+  }
+ ],
+ "issingle": 0,
+ "links": [],
+ "modified": "2026-10-13 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "CODSync",
+ "name": "Courier",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Operator",
+   "share": 0,
+   "write": 0
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "CODSync Viewer",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "courier_name",
+ "track_changes": 1
+}
