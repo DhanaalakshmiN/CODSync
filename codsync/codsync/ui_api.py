@@ -1929,16 +1929,18 @@ def test_connection():
 
 def _fetch_orders_job(user):
 	try:
-		frappe.set_user(user)
+		# background job: run as the user who started the fetch
+		frappe.set_user(user)  # nosemgrep
 		frappe.get_doc("Store Connection").fetch_orders()
 	except Exception:
 		pass  # the platform adapter already wrote the failure to Sync Log
 	finally:
 		frappe.cache().delete_value(FETCH_FLAG)
-		frappe.db.commit()
+		# background job: nothing else commits the sync log rows
+		frappe.db.commit()  # nosemgrep
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def fetch_orders():
 	"""Pull orders from the store in the background (one run at a time). Progress and result: sync_log() / settings().
 	Manager role."""

@@ -16,7 +16,8 @@ from codsync.codsync.platforms import get_platform
 from codsync.codsync.synclog import log_sync
 
 
-@frappe.whitelist(allow_guest=True)
+# Public by design: stores call this endpoint, and the platform adapter verifies the request signature.
+@frappe.whitelist(allow_guest=True, methods=["POST"])  # nosemgrep
 def webhook():
 	"""Receive a store webhook: adapter verifies it, processing is enqueued."""
 	raw_body = frappe.request.get_data()

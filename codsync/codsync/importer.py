@@ -218,7 +218,8 @@ def _read_raw(file_url):
 					row.append(cell.value)
 			raw.append(row)
 	elif path.lower().endswith(".csv"):
-		with open(path, newline="", encoding="utf-8-sig") as f:
+		# path comes from the File record (get_full_path), not from user input
+		with open(path, newline="", encoding="utf-8-sig") as f:  # nosemgrep
 			raw = list(csv.reader(f))
 	else:
 		frappe.throw(_("Only CSV, XLSX or XLS files are supported"))
@@ -805,11 +806,12 @@ def _run_background(import_type, file_url, courier, mapping_template, user):
 		result = import_parcels(file_url, courier, mapping_template)
 	else:
 		result = import_remittance(file_url, courier, mapping_template)
-	frappe.db.commit()
+	# background job: nothing else commits the import
+	frappe.db.commit()  # nosemgrep
 	frappe.publish_realtime("codsync_import_done", result, user=user)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def run_import(
 	import_type: str,
 	file_url: str,
