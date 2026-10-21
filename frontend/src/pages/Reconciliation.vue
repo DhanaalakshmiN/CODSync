@@ -1,11 +1,12 @@
 <script setup>
 import { computed, ref, watch } from "vue";
-import { ArrowLeftRight } from "lucide-vue-next";
+import { ArrowLeftRight, X } from "lucide-vue-next";
 import { api, call } from "../api";
 import { num, reconKind, rs } from "../format";
 import { refresh, state, toast } from "../store";
 import Badge from "../components/Badge.vue";
 import DataTable from "../components/DataTable.vue";
+import DeductionPatterns from "../components/DeductionPatterns.vue";
 import EmptyState from "../components/EmptyState.vue";
 import FilterChip from "../components/FilterChip.vue";
 import PageState from "../components/PageState.vue";
@@ -25,6 +26,8 @@ const batches = ref([]);
 const loading = ref(true);
 const error = ref("");
 const running = ref(false);
+const patternParcels = ref(null);
+const patternLabel = ref("");
 
 const STATES = ["Paid", "Short-paid", "Awaiting payout", "Missing", "Unknown"];
 const payoutKind = (s) =>
@@ -46,6 +49,7 @@ const load = async () => {
 				courier: courier.value || null,
 				batch: batch.value || null,
 				difference_not_zero: diffOnly.value ? 1 : 0,
+				parcels: patternParcels.value,
 				search: search.value || null,
 				page: page.value,
 				page_size: PAGE_SIZE,
@@ -66,6 +70,8 @@ watch(search, () => {
 	}, 250);
 });
 watch([status, courier, batch, diffOnly], () => {
+	patternParcels.value = null;
+	patternLabel.value = "";
 	page.value = 1;
 	load();
 });
@@ -90,6 +96,23 @@ const batchOptions = computed(() =>
 	batches.value.map((b) => ({ value: b.name, label: `${b.name} · ${b.courier} · ${b.date}` }))
 );
 const netDifference = computed(() => res.value?.stats?.net_difference || 0);
+
+const applyPattern = (p) => {
+	if (patternLabel.value === p.summary) {
+		clearPattern();
+		return;
+	}
+	patternParcels.value = p.parcels;
+	patternLabel.value = p.summary;
+	page.value = 1;
+	load();
+};
+const clearPattern = () => {
+	patternParcels.value = null;
+	patternLabel.value = "";
+	page.value = 1;
+	load();
+};
 
 const columns = [
 	{ key: "order_id", label: "Order" },
@@ -159,6 +182,8 @@ const runMatching = async () => {
 			</button>
 		</div>
 
+		<DeductionPatterns :courier="courier" @select="applyPattern" />
+
 		<section class="card">
 			<Tabs v-model="status" :tabs="tabs" />
 			<div class="tbar">
@@ -183,6 +208,14 @@ const runMatching = async () => {
 				<FilterChip v-model="courier" label="Courier" :options="couriers" />
 				<button class="btn sm" :class="{ on: diffOnly }" @click="diffOnly = !diffOnly">
 					Only with difference
+				</button>
+				<button
+					v-if="patternLabel"
+					class="btn sm on"
+					:title="patternLabel"
+					@click="clearPattern"
+				>
+					<X :size="12" :stroke-width="2" />Pattern
 				</button>
 			</div>
 			<PageState :loading="loading" :error="error" @retry="load">
