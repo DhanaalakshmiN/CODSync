@@ -25,7 +25,11 @@
   "payment_section",
   "payment_mode",
   "order_total",
+  "order_currency",
   "col_break_payment",
+  "original_amount",
+  "exchange_rate",
+  "rate_source",
   "cod_amount",
   "shipment_section",
   "courier",
@@ -151,6 +155,29 @@
    "fieldname": "order_total",
    "fieldtype": "Currency",
    "label": "Order Total"
+  },
+  {
+   "fieldname": "order_currency",
+   "fieldtype": "Link",
+   "label": "Order Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "original_amount",
+   "fieldtype": "Currency",
+   "label": "Original Amount",
+   "options": "order_currency",
+   "read_only": 1,
+   "description": "Amount exactly as Shopify sent it"
+  },
+  {
+   "fieldname": "exchange_rate",
+   "fieldtype": "Float",
+   "label": "Exchange Rate",
+   "precision": "9",
+   "read_only": 1,
+   "description": "Order currency to base currency, used for COD Amount"
   },
   {
    "fieldname": "col_break_payment",
@@ -279,6 +306,14 @@
    "fieldtype": "Table",
    "label": "Tracking Events",
    "options": "Tracking Event"
+  },
+  {
+   "fieldname": "rate_source",
+   "fieldtype": "Select",
+   "label": "Rate Source",
+   "options": "\nAPI\nManual\nFallback",
+   "read_only": 1,
+   "description": "Where the exchange rate came from"
   }
  ],
  "issingle": 0,

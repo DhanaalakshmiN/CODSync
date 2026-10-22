@@ -11,6 +11,23 @@ frappe.ui.form.on("Store Connection", {
 				frm.reload_doc();
 			});
 		});
+		frm.add_custom_button(__("Recalculate Currency Amounts"), () => {
+			frappe.confirm(
+				__("Recompute expected settlement and payout status for settled non-base-currency orders?"),
+				() =>
+					frm.call("recalculate_currency_amounts").then((r) => {
+						const c = r.message || {};
+						frappe.msgprint(
+							__("Checked {0}, changed {1} (now Paid {2}, now Short-paid {3})", [
+								c.checked,
+								c.changed,
+								c.now_paid,
+								c.now_short_paid,
+							])
+						);
+					})
+			);
+		});
 		frm.add_custom_button(__("Fetch Orders"), () => {
 			frm.call("fetch_orders").then((r) => {
 				const c = r.message || {};

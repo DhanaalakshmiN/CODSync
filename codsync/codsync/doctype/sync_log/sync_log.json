@@ -47,7 +47,7 @@
    "fieldname": "operation",
    "fieldtype": "Select",
    "label": "Operation",
-   "options": "Test Connection\nWebhook Order\nOrder Sync\nTracking Sync\nSettlement Sync\nExcel Import\nReconciliation\nOther",
+   "options": "Test Connection\nWebhook Order\nOrder Sync\nTracking Sync\nSettlement Sync\nExcel Import\nReconciliation\nCurrency Rate\nOther",
    "reqd": 1,
    "in_list_view": 1,
    "in_standard_filter": 1
@@ -74,7 +74,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Success\nFailed\nRetrying",
+   "options": "Success\nFailed\nRetrying\nWarning",
    "reqd": 1,
    "in_list_view": 1,
    "in_standard_filter": 1

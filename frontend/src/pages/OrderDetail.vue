@@ -3,7 +3,7 @@ import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { Check, TriangleAlert } from "lucide-vue-next";
 import { api } from "../api";
-import { dFull, dShortTime, dTime, deliveryKind, kg, reconKind, rs } from "../format";
+import { dFull, dShortTime, dTime, deliveryKind, formatMoney, kg, reconKind, rs } from "../format";
 import { refresh, state, toast } from "../store";
 import Badge from "../components/Badge.vue";
 import EmptyState from "../components/EmptyState.vue";
@@ -344,6 +344,28 @@ const cell = (v) => (v === null || v === undefined ? "—" : rs(v));
 							</ul>
 						</section>
 					</div>
+
+					<section v-if="h.order_currency && h.order_currency !== 'INR'" class="card">
+						<div class="ch"><h2>Currency</h2></div>
+						<div class="cb">
+							<dl class="kvl">
+								<dt>Original amount</dt>
+								<dd>{{ formatMoney(h.original_amount, h.order_currency) }}</dd>
+								<dt>Exchange rate</dt>
+								<dd>
+									{{ h.exchange_rate }}
+									<Badge
+										v-if="['Fallback', 'Manual'].includes(h.rate_source)"
+										:kind="h.rate_source === 'Fallback' ? 'pend' : ''"
+										nd
+										>{{ h.rate_source }}</Badge
+									>
+								</dd>
+								<dt>COD (INR)</dt>
+								<dd>{{ rs(h.amount) }}</dd>
+							</dl>
+						</div>
+					</section>
 
 					<div class="cols2">
 						<section class="card">

@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:{from_currency}-{to_currency}-{rate_date}",
+ "creation": "2026-10-22 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "from_currency",
+  "to_currency",
+  "col_break_pair",
+  "rate_date",
+  "rate",
+  "source"
+ ],
+ "fields": [
+  {
+   "fieldname": "from_currency",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "From Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "to_currency",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "To Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break_pair",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "rate_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Rate Date",
+   "reqd": 1
+  },
+  {
+   "description": "How many To Currency 1 From Currency is worth",
+   "fieldname": "rate",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Rate",
+   "precision": "9",
+   "reqd": 1
+  },
+  {
+   "default": "Manual",
+   "description": "A Manual row for a date always wins over API rows",
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Source",
+   "options": "API\nManual\nFallback",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-22 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "CODSync",
+ "name": "Currency Rate",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "export": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "export": 1, "read": 1, "report": 1, "role": "CODSync Manager", "share": 1, "write": 1},
+  {"export": 1, "read": 1, "report": 1, "role": "CODSync Operator"},
+  {"read": 1, "role": "CODSync Viewer"}
+ ],
+ "sort_field": "rate_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

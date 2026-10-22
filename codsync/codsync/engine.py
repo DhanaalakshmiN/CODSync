@@ -6,10 +6,32 @@ import frappe
 from frappe import _
 from frappe.utils import add_to_date, cint, flt, get_datetime, today
 
+from codsync.codsync.currency import get_currency_precision
+
 EXCEPTION_TYPE_BY_PAYOUT = {
 	"Short-paid": "Unexpected deduction",
 	"Missing": "Missing settlement",
 }
+
+
+def payout_decision(parcel, expected, actual):
+	"""(difference, within, payout_status) for a settlement.
+
+	Parcels in a foreign currency use the fx tolerance (max of amount and % of
+	expected); same-currency parcels keep the plain Store Connection tolerance.
+	Only the status decision uses the tolerance: difference is always actual - expected.
+	"""
+	from codsync.codsync.currency import fx_tolerance, get_settings, is_foreign
+
+	settings = get_settings()
+	expected = flt(expected, get_currency_precision())
+	difference = flt(flt(actual) - expected, get_currency_precision())
+	if is_foreign(parcel.get("order_currency"), settings.base_currency):
+		tolerance = fx_tolerance(expected, settings)
+	else:
+		tolerance = get_tolerance()
+	within = abs(difference) <= tolerance
+	return difference, within, "Short-paid" if difference < 0 and not within else "Paid"
 
 
 def get_tolerance():
@@ -51,7 +73,7 @@ def expected_for(parcel, line=None):
 		"expected_cod_fee": flt(fee, 2),
 		"expected_freight": flt(freight, 2),
 		"expected_gst": flt(gst, 2),
-		"expected_settlement": flt(cod - fee - freight - gst, 2),
+		"expected_settlement": flt(cod - fee - freight - gst, get_currency_precision()),
 	}
 
 
@@ -206,12 +228,10 @@ def reconcile_line(line, parcel):
 	if isinstance(parcel, str):
 		parcel = frappe.get_doc("COD Parcel", parcel)
 	exp = expected_for(parcel, line)
-	expected = exp["expected_settlement"]
 	actual = flt(line.net_paid)
-	difference = flt(actual - expected, 2)
+	expected = flt(exp["expected_settlement"], get_currency_precision())
+	difference, within, payout_status = payout_decision(parcel, expected, actual)
 	unexpected = flt(line.weight_charge) + flt(line.rto_charge) + flt(line.other_charge)
-	within = abs(difference) <= get_tolerance()
-	payout_status = "Short-paid" if difference < 0 and not within else "Paid"
 
 	frappe.db.set_value(
 		"Remittance Line",
@@ -891,3 +911,50 @@ def run_hourly_settlement_sync():
 		due_at = frappe.utils.get_datetime(f"{now.date()} {c.settlement_sync_time or '09:00:00'}")
 		if now >= due_at and not (c.last_settlement_sync and c.last_settlement_sync >= due_at):
 			sync_settlements(c.name)
+
+
+def recalculate_currency_amounts():
+	"""Recompute expected_settlement, difference and payout_status for settled parcels
+	whose order currency differs from the base currency (after a rate or tolerance change).
+	"""
+	from codsync.codsync.currency import get_base_currency
+
+	base = get_base_currency()
+	names = frappe.get_all(
+		"COD Parcel",
+		filters={
+			"order_currency": ["not in", ["", base]],
+			"payout_status": ["in", ["Paid", "Short-paid"]],
+		},
+		pluck="name",
+	)
+	counts = {"checked": 0, "changed": 0, "now_paid": 0, "now_short_paid": 0}
+	for name in names:
+		parcel = frappe.get_doc("COD Parcel", name)
+		line_name = frappe.db.get_value("Remittance Line", {"cod_parcel": name}, "name", order_by="modified desc")
+		line = frappe.get_doc("Remittance Line", line_name) if line_name else None
+		expected = expected_for(parcel, line)["expected_settlement"]
+		difference, within, status = payout_decision(parcel, expected, parcel.actual_settlement)
+		counts["checked"] += 1
+		if (flt(parcel.expected_settlement), flt(parcel.difference), parcel.payout_status) == (
+			flt(expected, get_currency_precision()),
+			difference,
+			status,
+		):
+			continue
+		counts["changed"] += 1
+		counts["now_paid" if status == "Paid" else "now_short_paid"] += 1
+		frappe.db.set_value(
+			"COD Parcel",
+			name,
+			{"expected_settlement": expected, "difference": difference, "payout_status": status},
+		)
+		if line:
+			frappe.db.set_value(
+				"Remittance Line",
+				line.name,
+				{"expected_net": expected, "difference": difference, "match_status": status},
+			)
+		if status == "Paid":
+			resolve_exceptions("Amount mismatch", name, "Within currency tolerance after recalculation")
+	return counts

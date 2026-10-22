@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { RefreshCw } from "lucide-vue-next";
 import { api } from "../api";
-import { codKind, daysAgoIso, dShort, deliveryKind, reconKind, rs, saveCsv } from "../format";
+import { codKind, daysAgoIso, dShort, deliveryKind, foreignNote, reconKind, rs, saveCsv } from "../format";
 import { refresh, state, toast } from "../store";
 import Badge from "../components/Badge.vue";
 import DataTable from "../components/DataTable.vue";
@@ -260,7 +260,18 @@ const syncShopify = async () => {
 						<template #cell-date="{ row }"
 							><span class="muted">{{ dShort(row.date) }}</span></template
 						>
-						<template #cell-amount="{ row }">{{ rs(row.amount) }}</template>
+						<template #cell-amount="{ row }"
+							>{{ rs(row.amount) }}
+							<div v-if="foreignNote(row)" class="muted">
+								{{ foreignNote(row) }}
+								<Badge
+									v-if="['Fallback', 'Manual'].includes(row.rate_source)"
+									:kind="row.rate_source === 'Fallback' ? 'pend' : ''"
+									nd
+									>{{ row.rate_source }} rate</Badge
+								>
+							</div></template
+						>
 						<template #cell-payment_mode="{ row }"
 							><Badge nd :out="row.payment_mode === 'COD'">{{
 								row.payment_mode
