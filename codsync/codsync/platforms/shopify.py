@@ -228,6 +228,9 @@ class ShopifyPlatform(BasePlatform):
 		return counts
 
 	def order_url(self, external_id, conn):
-		if external_id:
-			return f"https://{(conn.get('store_url') or '').strip()}/admin/orders/{external_id}"
+		# canonical admin URL: admin.shopify.com/store/<handle>/orders/<numeric id>
+		host = (conn.get("store_url") or "").strip().lower().removeprefix("https://").removeprefix("http://")
+		handle = host.split("/")[0].removesuffix(".myshopify.com")
+		if external_id and handle:
+			return f"https://admin.shopify.com/store/{handle}/orders/{external_id}"
 		return None
