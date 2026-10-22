@@ -23,7 +23,7 @@ from frappe.utils import (
 	pretty_date,
 )
 
-from codsync.codsync import engine, patterns
+from codsync.codsync import engine, patterns, performance
 from codsync.codsync.platforms import get_platform
 
 READ_ROLES = ("CODSync Manager", "CODSync Operator", "CODSync Viewer", "System Manager")
@@ -1141,6 +1141,13 @@ def deduction_patterns(courier: str | None = None, from_date: str | None = None,
 	"""Repeating unexplained deductions (patterns.get_deduction_patterns). Read role."""
 	_read()
 	return patterns.get_deduction_patterns(courier=courier, from_date=from_date, to_date=to_date)
+
+
+@frappe.whitelist()
+def courier_performance(from_date: str | None = None, to_date: str | None = None, group_by: str = "courier"):
+	"""Courier performance metrics and score (performance.get_courier_performance). Read role."""
+	_read()
+	return performance.get_courier_performance(from_date=from_date, to_date=to_date, group_by=group_by)
 
 
 BATCH_STATUSES = ("Reconciled", "Mismatch", "Pending review")

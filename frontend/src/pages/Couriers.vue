@@ -9,7 +9,14 @@ import Drawer from "../components/Drawer.vue";
 import EmptyState from "../components/EmptyState.vue";
 import PageState from "../components/PageState.vue";
 import SelectField from "../components/SelectField.vue";
+import CourierPerformance from "../components/CourierPerformance.vue";
+import Tabs from "../components/Tabs.vue";
 
+const pageTab = ref("Couriers");
+const PAGE_TABS = [
+	{ key: "Couriers", label: "Couriers" },
+	{ key: "Performance", label: "Performance" },
+];
 const rows = ref(null);
 const loading = ref(true);
 const error = ref("");
@@ -175,7 +182,10 @@ const title = computed(() =>
 			<span>{{ banner.text }}</span>
 		</div>
 
-		<PageState :loading="loading" :error="error" @retry="load">
+		<Tabs v-model="pageTab" :tabs="PAGE_TABS" />
+		<CourierPerformance v-if="pageTab === 'Performance'" />
+
+		<PageState v-else :loading="loading" :error="error" @retry="load">
 			<section v-if="rows && !rows.length" class="card">
 				<EmptyState
 					title="No couriers yet"
