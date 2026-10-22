@@ -21,3 +21,15 @@ class StoreConnection(Document):
 			return get_platform(self.platform).fetch_orders(self)
 		except NotImplementedError as e:
 			frappe.throw(str(e))
+
+	@frappe.whitelist()
+	def recalculate_currency_amounts(self):
+		frappe.only_for(("System Manager", "CODSync Manager"))
+		from codsync.codsync.engine import recalculate_currency_amounts
+
+		return recalculate_currency_amounts()
+
+	def validate(self):
+		from codsync.codsync.currency import default_base_currency
+
+		self.base_currency = (self.base_currency or default_base_currency()).upper()

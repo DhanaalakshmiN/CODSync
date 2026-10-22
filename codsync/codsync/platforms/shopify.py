@@ -12,6 +12,7 @@ from frappe.utils import add_to_date, cint, flt, get_datetime, now_datetime
 from frappe.utils.password import set_encrypted_password
 
 from codsync.codsync.platforms.base import BasePlatform, get_creds
+from codsync.codsync.currency import convert_to_base, get_base_currency
 from codsync.codsync.synclog import log_sync
 
 
@@ -57,7 +58,13 @@ class ShopifyPlatform(BasePlatform):
 
 		addr = payload.get("shipping_address") or {}
 		customer = payload.get("customer") or {}
-		total = flt(payload.get("total_price") or 0)
+		original = flt(payload.get("total_price") or 0)
+		base_currency = get_base_currency(conn)
+		currency = (payload.get("currency") or base_currency).upper()
+		created = payload.get("created_at")
+		total, rate, rate_source = convert_to_base(
+			original, currency, get_datetime(created).date() if created else None, base_currency
+		)
 		cancelled = bool(payload.get("cancelled_at"))
 		fulfilled = payload.get("fulfillment_status") == "fulfilled" or bool(fulfillments)
 
@@ -74,6 +81,10 @@ class ShopifyPlatform(BasePlatform):
 			"pincode": addr.get("zip") or "",
 			"payment_mode": "COD" if is_cod else "Prepaid",
 			"order_total": total,
+			"order_currency": currency,
+			"original_amount": original,
+			"exchange_rate": rate,
+			"rate_source": rate_source,
 			"cod_amount": total if is_cod else 0,
 			"order_status": "Cancelled" if cancelled else ("Fulfilled" if fulfilled else "Unfulfilled"),
 			# helper keys applied by the caller, not COD Parcel fields

@@ -10,7 +10,17 @@ from frappe import _
 
 
 def get_creds(conn):
-	"""Generic credentials for a Store Connection doc.
+	"""Generic credentials for a Store Connection doc, plus the optional rate provider key."""
+	creds = _platform_creds(conn)
+	try:
+		creds["rate_api_key"] = conn.get_password("rate_api_key", raise_exception=False) or None
+	except Exception:
+		creds["rate_api_key"] = None
+	return creds
+
+
+def _platform_creds(conn):
+	"""Platform credentials for a Store Connection doc.
 
 	Returns {client_id, client_secret, api_key, api_version, webhook_secret, extra};
 	passwords are decrypted, missing values are None.
