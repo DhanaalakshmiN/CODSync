@@ -1,4 +1,16 @@
-   {% extends "templates/web.html" %}
-   {% block page_content %}
-   <h2>CODSync is running inside Shopify</h2>
-   {% endblock %}
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="shopify-api-key" content="{{ api_key }}">
+	<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+	<title>{{ title }}</title>
+	<link rel="stylesheet" href="/assets/codsync/frontend/app.css?v={{ css_version }}">
+</head>
+<body>
+	<script>window.CODSYNC = {{ codsync }};</script>
+	<div id="app"></div>
+	<script type="module" src="/assets/codsync/frontend/app.js?v={{ js_version }}"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory, createWebHistory } from "vue-router";
 
 // meta.pg is the page class (pg-<name>) the design CSS is scoped with; meta.nav highlights the sidebar item
 const page = (name, path, comp, nav, extra = {}) => ({
@@ -9,7 +9,10 @@ const page = (name, path, comp, nav, extra = {}) => ({
 });
 
 export default createRouter({
-	history: createWebHistory("/cod-ledger"),
+		history:
+		import.meta.env.VITE_DEMO || (window.CODSYNC && window.CODSYNC.embedded)
+			? createWebHashHistory() // inside Shopify the page URL belongs to Shopify; keep routes in the hash
+			: createWebHistory("/cod-ledger"),
 	routes: [
 		page("overview", "/", () => import("./pages/Overview.vue"), "overview"),
 		page("orders", "/orders", () => import("./pages/Orders.vue"), "orders"),

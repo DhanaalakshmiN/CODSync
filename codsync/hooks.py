@@ -28,6 +28,7 @@ app_license = "mit"
 # app_include_css = "/assets/codsync/css/codsync.css"
 app_include_js = "/assets/codsync/js/import_dialog.js"
 after_request = ["codsync.shopify_frame.allow_shopify_frame"]
+auth_hooks = ["codsync.shopify_auth.authenticate"]
 # include js, css files in header of web template
 # web_include_css = "/assets/codsync/css/codsync.css"
 # web_include_js = "/assets/codsync/js/codsync.js"

@@ -26,6 +26,14 @@ async function csrf() {
 	return token || refreshToken();
 }
 
+// Inside Shopify admin cookies are unavailable: every request carries the App Bridge session token.
+export const embedded = () => !!(window.CODSYNC && window.CODSYNC.embedded);
+const SESSION_HEADER = "X-Shopify-Session-Token";
+async function sessionToken() {
+	if (!window.shopify || !window.shopify.idToken) throw new Error("Open CODSync from Shopify admin");
+	return window.shopify.idToken();
+}
+
 let redirecting = false;
 function sessionExpired() {
 	if (!redirecting) {
@@ -49,6 +57,11 @@ function sessionExpired() {
 
 // fetch with the session cookie and a valid CSRF token; one retry with a fresh token on CSRFTokenError
 async function send(url, makeInit) {
+	if (embedded()) {
+		const init = makeInit();
+		init.headers = { ...init.headers, [SESSION_HEADER]: await sessionToken() };
+		return fetch(url, init);
+	}
 	for (let attempt = 0; ; attempt++) {
 		const init = makeInit();
 		init.credentials = "same-origin";
@@ -109,6 +122,9 @@ export async function call(fn, args = {}, { silent = false, method = null } = {}
 	return (await res.json()).message;
 }
 
+// First open inside Shopify: connects the shop (token exchange, user, webhooks). Idempotent.
+export const connectShop = () => call("codsync.shopify_auth.connect", {}, { silent: true });
+
 // api.orders({tab: "COD"}) -> POST /api/method/codsync.codsync.ui_api.orders
 export const api = new Proxy({}, { get: (_, fn) => (args, opts) => call(fn, args, opts) });
 
@@ -158,7 +174,22 @@ export async function download(fn, args = {}) {
 }
 
 // Report CSV: plain GET navigation, the browser saves the attachment itself (no fetch/blob to block).
-export function downloadReportCsv(name, filters) {
+export async function downloadReportCsv(name, filters) {
 	const q = new URLSearchParams({ name, filters: JSON.stringify(filters) });
-	window.location.assign(`${METHOD}${UI}report_csv?${q}`);
+	const url = `${METHOD}${UI}report_csv?${q}`;
+	if (!embedded()) return window.location.assign(url);
+	// embedded: a plain navigation cannot carry the session token, so fetch it and save the blob
+	const res = await fetch(url, { headers: { [SESSION_HEADER]: await sessionToken() } });
+	if (!res.ok) {
+		const msg = await errorText(res);
+		toast(msg, "e");
+		throw new Error(msg);
+	}
+	const a = document.createElement("a");
+	a.href = URL.createObjectURL(await res.blob());
+	a.download = `${name}.csv`;
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+	setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
