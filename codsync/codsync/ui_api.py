@@ -570,11 +570,16 @@ def overview(period: str = "30d", courier: str | None = None):
 	]
 
 	banner = [
-		{"courier": c.name, "last_error": c.last_error, "time": _dt(c.last_settlement_sync)}
+		{
+			"courier": c.name,
+			"last_error": c.last_error,
+			"time": _dt(c.last_settlement_sync),
+			"settlement_via": c.settlement_via,
+		}
 		for c in frappe.get_all(
 			"Courier",
 			filters={"connection_status": "Action needed"},
-			fields=["name", "last_error", "last_settlement_sync"],
+			fields=["name", "last_error", "last_settlement_sync", "settlement_via"],
 		)
 	]
 	return {

@@ -94,12 +94,20 @@ const diffCell = (r) =>
 					<CircleAlert :size="18" :stroke-width="1.6" color="#B42318" />
 					<div style="flex: 1 1 300px">
 						<strong
-							>{{ b.courier }} settlement sync failed
-							{{ ago(b.time).replace(" ago", "") }} ago.
+							>{{ b.courier }}
+							{{ b.settlement_via === "API" ? "settlement" : "tracking" }} sync failed<template v-if="b.time">
+								{{ ago(b.time).replace(" ago", "") }} ago</template
+							>.
 						</strong>
 						<span class="muted"
-							>{{ b.last_error }} Tracking is still syncing; new settlements won't
-							import until you reconnect.</span
+							>{{ b.last_error }}
+							<template v-if="b.settlement_via === 'API'"
+								>Tracking is still syncing; new settlements won't import until you
+								reconnect.</template
+							><template v-else
+								>Settlements are imported from Excel and are not affected; tracking
+								updates resume once you reconnect.</template
+							></span
 						>
 					</div>
 					<div class="acts">
