@@ -51,7 +51,7 @@ const run = async (key, fn, msg) => {
 	busy.value = "";
 };
 const dispute = () =>
-	run("dispute", () => api.raise_dispute({ order_id: id.value }), "Dispute raised");
+	run("dispute", () => api.raise_dispute({ order_id: id.value }), "Marked as disputed");
 const resolve = () =>
 	run("resolve", () => api.resolve_order({ order_id: id.value }), "Marked resolved");
 const saveNote = async () => {
@@ -113,7 +113,7 @@ const cell = (v) => (v === null || v === undefined ? "—" : rs(v));
 							:disabled="!can('raise_dispute') || busy === 'dispute'"
 							@click="dispute"
 						>
-							Raise dispute
+							Mark as disputed
 						</button>
 						<button
 							class="btn pri"
@@ -307,7 +307,7 @@ const cell = (v) => (v === null || v === undefined ? "—" : rs(v));
 											:disabled="!can('raise_dispute') || busy === 'dispute'"
 											@click="dispute"
 										>
-											Raise weight dispute
+											Mark weight as disputed
 										</button>
 									</div>
 								</template>

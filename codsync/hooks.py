@@ -168,6 +168,7 @@ scheduler_events = {
 	"daily": [
 		"codsync.codsync.tasks.run_daily_mark_missing",
 		"codsync.codsync.tasks.run_daily_reconciliation",
+		"codsync.codsync.disputes.send_follow_ups",
 	],
 }
 

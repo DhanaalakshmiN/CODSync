@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { api } from "../api";
 import { excKind, rs } from "../format";
-import { openException, state } from "../store";
+import { openException, refresh, state, toast } from "../store";
 import Badge from "../components/Badge.vue";
 import DataTable from "../components/DataTable.vue";
 import EmptyState from "../components/EmptyState.vue";
@@ -19,6 +19,8 @@ const page = ref(1);
 const f = ref({ exception_type: "", courier: "" });
 const res = ref(null);
 const couriers = ref([]);
+const selected = ref([]);
+const sending = ref(false);
 const loading = ref(true);
 const error = ref("");
 
@@ -56,6 +58,7 @@ watch(
 	[tab, f],
 	() => {
 		page.value = 1;
+		selected.value = [];
 		load();
 	},
 	{ deep: true }
@@ -80,6 +83,23 @@ const columns = [
 	{ key: "age_days", label: "Age", num: true },
 	{ key: "assignee", label: "Assignee" },
 ];
+const sendClaims = async () => {
+	sending.value = true;
+	try {
+		const names = selected.value;
+		const pv = await api.preview_claim({ names }, { silent: true });
+		const lines = pv.map((p) => `${p.courier}: ${p.count} claim(s), ${rs(p.total)} to ${p.to}`);
+		if (!confirm(`Email these claims?\n\n${lines.join("\n")}`)) return;
+		await api.send_claim({ names }, { silent: true });
+		toast("Claims emailed");
+		selected.value = [];
+		refresh();
+	} catch (e) {
+		toast(e.message, "e");
+	} finally {
+		sending.value = false;
+	}
+};
 const stageKind = (s) =>
 	({ Open: "mis", "In review": "pend", Disputed: "info", Resolved: "ok" }[s] || "");
 const filtered = computed(() => !!(search.value || f.value.exception_type || f.value.courier));
@@ -98,6 +118,10 @@ const filtered = computed(() => !!(search.value || f.value.exception_type || f.v
 		</div>
 		<section class="card">
 			<Tabs v-model="tab" :tabs="tabs" />
+			<div v-if="selected.length" class="tbar">
+				<span class="muted">{{ selected.length }} selected</span>
+				<button class="btn sm" :disabled="sending" @click="sendClaims">Send claim to courier</button>
+			</div>
 			<div class="tbar">
 				<label class="fld"
 					><svg
@@ -139,8 +163,10 @@ const filtered = computed(() => !!(search.value || f.value.exception_type || f.v
 					<DataTable
 						v-else
 						:columns="columns"
+						v-model:selected="selected"
 						:rows="res.rows"
 						row-key="name"
+						selectable
 						clickable
 						@row-click="(r) => openException(r.name)"
 					>
@@ -191,8 +217,9 @@ const filtered = computed(() => !!(search.value || f.value.exception_type || f.v
 							<Badge
 								v-if="tab === 'Disputed' || row.stage === 'Disputed'"
 								:kind="stageKind(row.stage)"
-								>Disputed</Badge
-							></template
+								>{{ row.dispute_status === "Raised with Courier" ? "Disputed" : row.dispute_status }}</Badge
+							>
+							<Badge v-if="row.overdue" kind="mis" nd>Overdue</Badge></template
 						>
 					</DataTable>
 					<Pager

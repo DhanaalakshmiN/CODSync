@@ -23,7 +23,7 @@ from frappe.utils import (
 	pretty_date,
 )
 
-from codsync.codsync import engine, patterns, performance
+from codsync.codsync import disputes, engine, patterns, performance
 from codsync.codsync.platforms import get_platform
 
 READ_ROLES = ("CODSync Manager", "CODSync Operator", "CODSync Viewer", "System Manager")
@@ -1417,6 +1417,10 @@ EXC_FIELDS = [
 	"claim_amount",
 	"dispute_status",
 	"dispute_raised_on",
+	"agreed_amount",
+	"recovered_amount",
+	"next_follow_up",
+	"claim_sent_on",
 	"creation",
 ]
 
@@ -1425,7 +1429,7 @@ def _stage(e):
 	"""Tab an exception belongs to: Resolved / Disputed / In review (assigned) / Open."""
 	if e.status == "Resolved":
 		return "Resolved"
-	if e.dispute_status == "Raised with Courier":
+	if e.dispute_status in disputes.ACTIVE_STAGES:
 		return "Disputed"
 	return "In review" if e.assignee else "Open"
 
@@ -1448,6 +1452,9 @@ def _exc_list_row(e):
 		"age_days": max(date_diff(getdate(end) if end else nowdate(), getdate(opened)), 0) if opened else 0,
 		"assignee": e.assignee,
 		"dispute_status": e.dispute_status,
+		"claim_amount": flt(e.claim_amount, 2),
+		"recovered_amount": flt(e.recovered_amount, 2),
+		"overdue": disputes.is_overdue(e),
 	}
 
 
@@ -1573,8 +1580,8 @@ def _exc_options(exc, candidates):
 		opts.append(
 			(
 				"raise_dispute",
-				"Raise dispute with courier",
-				"Claim the amount from the courier and track the dispute.",
+				"Mark as disputed (no email)",
+				"Record a claim you make outside the app (phone or courier portal). To email the courier, use Send claim.",
 			)
 		)
 	if exc.exception_type in ACCEPT_TYPES and exc.cod_parcel:
@@ -1675,6 +1682,21 @@ def exception_detail(name: str):
 			"claim_amount": flt(exc.claim_amount, 2),
 			"raised_on": _d(exc.dispute_raised_on),
 			"suggested_claim": abs(flt(exc.impact, 2)),
+			"agreed_amount": flt(exc.agreed_amount, 2),
+			"recovered_amount": flt(exc.recovered_amount, 2),
+			"claim_sent_on": _dt(exc.claim_sent_on),
+			"claim_sent_to": exc.claim_sent_to,
+			"claim_reference": exc.claim_reference,
+			"next_follow_up": _d(exc.next_follow_up),
+			"overdue": disputes.is_overdue(exc),
+			"can_send": exc.status == "Open"
+			and exc.exception_type in disputes.DISPUTE_TYPES
+			and (exc.dispute_status or "Not raised") not in disputes.TERMINAL_STAGES,
+			"stages": [x for x in disputes.stages() if x not in ("Not raised", "Refunded", "Resolved")],
+			"log": [
+				{"stage": r.stage, "on": _dt(r.changed_on), "by": r.changed_by, "note": r.note}
+				for r in reversed(exc.stage_log or [])
+			],
 		},
 		"resolution": exc.resolution,
 		"resolution_note": exc.resolution_note,
@@ -1682,6 +1704,45 @@ def exception_detail(name: str):
 		"assignable_users": [{"name": u.name, "label": u.full_name or u.name} for u in users],
 		"activity": _exc_activity(exc),
 	}
+
+
+@frappe.whitelist()
+def preview_claim(names: list | str, message: str | None = None):
+	"""The email(s) send_claim would send, one per courier. Sends nothing."""
+	_write()
+	return disputes.preview_claim(_json(names, []), message)
+
+
+@frappe.whitelist()
+def send_claim(names: list | str, message: str | None = None):
+	"""Email one consolidated claim per courier for these exceptions. Write role."""
+	_write()
+	return disputes.send_claim(_json(names, []), message)
+
+
+@frappe.whitelist()
+def set_dispute_stage(
+	name: str,
+	stage: str,
+	note: str | None = None,
+	agreed_amount: float | None = None,
+	claim_reference: str | None = None,
+):
+	"""Record the courier's answer: stage, agreed amount, ticket reference. Write role."""
+	_write()
+	exc = frappe.get_doc("COD Exception", name)
+	if exc.status == "Resolved":
+		frappe.throw(_("{0} is already resolved").format(name))
+	if stage not in disputes.stages() or stage in ("Not raised", "Refunded", "Resolved"):
+		frappe.throw(_("Stage {0} cannot be set by hand").format(stage))
+	if (exc.dispute_status or "Not raised") == "Not raised":
+		frappe.throw(_("Raise a dispute first"))
+	if claim_reference:
+		exc.claim_reference = claim_reference
+	disputes.set_stage(exc, stage, note, agreed_amount)
+	exc.save(ignore_permissions=True)
+	_log_exc(exc, f"Dispute stage: {stage}" + (f". {note}" if note else ""))
+	return {"name": exc.name, "dispute_status": exc.dispute_status, "stage": _stage(exc)}
 
 
 def _log_exc(exc, text):
@@ -1718,7 +1779,7 @@ def resolve_exception(name: str, action: str, payload: dict | str | None = None)
 		if action == "raise_dispute":
 			if exc.exception_type not in DISPUTE_TYPES:
 				frappe.throw(_("A dispute cannot be raised for {0}").format(exc.exception_type))
-			if exc.dispute_status == "Raised with Courier":
+			if exc.dispute_status in disputes.ACTIVE_STAGES:
 				frappe.throw(_("A dispute is already raised for {0}").format(name))
 			claim = flt(
 				p.get("claim_amount") if p.get("claim_amount") not in (None, "") else abs(flt(exc.impact))
@@ -1726,10 +1787,8 @@ def resolve_exception(name: str, action: str, payload: dict | str | None = None)
 			if claim <= 0:
 				frappe.throw(_("Claim amount must be greater than 0"))
 			exc.resolution, exc.claim_amount = "Raise dispute", claim
-			exc.dispute_status, exc.dispute_raised_on = (
-				"Raised with Courier",
-				nowdate(),
-			)  # set here so the claim is kept
+			exc.dispute_raised_on = nowdate()
+			disputes.set_stage(exc, "Raised with Courier", note)
 			if note:
 				exc.resolution_note = note
 			exc.save(ignore_permissions=True)
@@ -1762,9 +1821,9 @@ def resolve_exception(name: str, action: str, payload: dict | str | None = None)
 				frappe.throw(_("A note is required to resolve manually"))
 			if (
 				p.get("dispute_outcome") in ("Resolved", "Rejected")
-				and exc.dispute_status == "Raised with Courier"
+				and exc.dispute_status in disputes.ACTIVE_STAGES
 			):
-				exc.dispute_status = p["dispute_outcome"]
+				disputes.set_stage(exc, p["dispute_outcome"], note)
 			_finish(exc, "Resolved manually", note)
 			_log_exc(exc, f"Resolved manually. {note}")
 		elif action == "assign":
