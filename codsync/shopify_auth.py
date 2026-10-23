@@ -150,7 +150,11 @@ def authenticate():
 		return
 	shop, _payload = decode_session_token(token)
 	_single_store_check(shop)
-	frappe.set_user(ensure_shop_user(shop))
+	email = ensure_shop_user(shop)
+	# frappe.set_user() resets the request parameters; without this every API call loses its arguments
+	form_dict = frappe.local.form_dict
+	frappe.set_user(email)
+	frappe.local.form_dict = form_dict
 
 
 # --------------------------------------------------------------------------- connect
@@ -241,16 +245,26 @@ def connect():
 	if not already:
 		access_token = exchange_token(shop, token)
 		client_id, client_secret = _app_credentials()
-		conn.platform = "Shopify"
-		conn.store_url = shop
-		conn.enabled = 1
-		conn.shopify_client_id = client_id
-		conn.shopify_client_secret = client_secret
-		conn.webhook_secret = client_secret  # app webhooks are signed with the app secret
-		conn.token_expiry = add_to_date(now_datetime(), years=OFFLINE_TOKEN_YEARS)
-		conn.flags.ignore_permissions = True
-		conn.save()
-		set_encrypted_password("Store Connection", "Store Connection", access_token, "access_token")
+		# write only the fields the install owns: saving the whole record would also store zeros for
+		# settings it never touched (which broke the currency cache)
+		frappe.db.set_single_value(
+			"Store Connection",
+			{
+				"platform": "Shopify",
+				"store_url": shop,
+				"enabled": 1,
+				"shopify_client_id": client_id,
+				"token_expiry": add_to_date(now_datetime(), years=OFFLINE_TOKEN_YEARS),
+			},
+			None,
+		)
+		for field, value in (
+			("shopify_client_secret", client_secret),
+			("webhook_secret", client_secret),  # app webhooks are signed with the app secret
+			("access_token", access_token),
+		):
+			set_encrypted_password("Store Connection", "Store Connection", value, field)
+		frappe.clear_document_cache("Store Connection", "Store Connection")
 		frappe.db.commit()  # nosemgrep: the install must persist even if the page request later fails
 		results = register_webhooks(
 			shop, access_token, _base_url(), conn.shopify_api_version or "2026-07"
