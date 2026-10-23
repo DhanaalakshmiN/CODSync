@@ -9,5 +9,18 @@ import "./styles/cod_ledger.css";
 import "./styles/extras.css";
 import App from "./App.vue";
 import router from "./router";
+import { connectShop, embedded } from "./api";
 
-createApp(App).use(router).mount("#app");
+const mount = () => createApp(App).use(router).mount("#app");
+
+if (embedded()) {
+	// Inside Shopify: connect the shop first, then show the app
+	connectShop().then(mount, (e) => {
+		document.getElementById("app").innerHTML =
+			'<p style="font-family:sans-serif;padding:24px">Could not connect to Shopify: ' +
+			String(e.message || e).replace(/</g, "&lt;") +
+			"</p>";
+	});
+} else {
+	mount();
+}
