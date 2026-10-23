@@ -24,6 +24,20 @@ export const rs = (n, dec = true) => {
 	const s = "₹" + (dec ? inr : inr0).format(Math.abs(v));
 	return v < 0 ? MINUS + s : s;
 };
+// Amount in any ISO currency, e.g. formatMoney(50, "USD") -> "$50.00"
+export const formatMoney = (amount, currency = "INR") => {
+	if (amount === null || amount === undefined || amount === "") return "—";
+	try {
+		return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
+	} catch {
+		return `${currency} ${Number(amount).toFixed(2)}`;
+	}
+};
+// "$50.00 @ 94.47" for non-INR rows, "" for INR
+export const foreignNote = (row) =>
+	row.order_currency && row.order_currency !== "INR"
+		? `${formatMoney(row.original_amount, row.order_currency)} @ ${Number(row.exchange_rate)}`
+		: "";
 // signed with plus, e.g. "+₹0.50"
 export const rsSigned = (n) => (Number(n) > 0 ? "+" : "") + rs(n);
 export const num = (n) => (n === null || n === undefined ? "—" : int.format(n));
@@ -114,6 +128,9 @@ export function saveCsv(name, columns, rows) {
 	const a = document.createElement("a");
 	a.href = url;
 	a.download = name;
+	a.style.display = "none";
+	document.body.appendChild(a);
 	a.click();
-	URL.revokeObjectURL(url);
+	a.remove();
+	setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

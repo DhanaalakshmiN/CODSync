@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Banknote, Download, Landmark, Clock, SearchX } from "lucide-vue-next";
-import { api, download } from "../api";
+import { api, downloadReportCsv } from "../api";
 import { num, rs } from "../format";
 import { state } from "../store";
 import DataTable from "../components/DataTable.vue";
@@ -81,14 +81,10 @@ const columns = computed(() =>
 	}))
 );
 const rows = computed(() => (res.value?.rows || []).map((r, i) => ({ ...r, _i: i })));
-const downloadCsv = async () => {
+const downloadCsv = () => {
 	downloading.value = true;
-	try {
-		await download("report_csv", { name: current.value, filters: filters() });
-	} catch (e) {
-		/* toast already shown */
-	}
-	downloading.value = false;
+	downloadReportCsv(current.value, filters());
+	setTimeout(() => (downloading.value = false), 1500);
 };
 </script>
 
@@ -138,7 +134,7 @@ const downloadCsv = async () => {
 				<div class="acts" style="margin-left: auto">
 					<button
 						class="btn"
-						:disabled="downloading || loading || !!error || badRange"
+						:disabled="downloading || loading || !!error || !!badRange"
 						@click="downloadCsv"
 					>
 						<Download :size="16" :stroke-width="1.6" />Download CSV

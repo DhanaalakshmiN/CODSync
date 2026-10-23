@@ -150,6 +150,15 @@ export async function download(fn, args = {}) {
 	const a = document.createElement("a");
 	a.href = url;
 	a.download = name;
+	a.style.display = "none";
+	document.body.appendChild(a); // Firefox ignores clicks on detached links
 	a.click();
-	URL.revokeObjectURL(url);
+	a.remove();
+	setTimeout(() => URL.revokeObjectURL(url), 1000); // revoking at once can cancel the save
+}
+
+// Report CSV: plain GET navigation, the browser saves the attachment itself (no fetch/blob to block).
+export function downloadReportCsv(name, filters) {
+	const q = new URLSearchParams({ name, filters: JSON.stringify(filters) });
+	window.location.assign(`${METHOD}${UI}report_csv?${q}`);
 }
