@@ -39,7 +39,10 @@
   "import_mapping_section",
   "parcels_mapping",
   "col_break_import_mapping",
-  "remittance_mapping"
+  "remittance_mapping",
+  "claims_section",
+  "claims_email",
+  "claims_cc"
  ],
  "fields": [
   {
@@ -231,6 +234,24 @@
    "fieldtype": "Code",
    "label": "Remittance Mapping",
    "options": "JSON"
+  },
+  {
+   "fieldname": "claims_section",
+   "fieldtype": "Section Break",
+   "label": "Claims"
+  },
+  {
+   "fieldname": "claims_email",
+   "fieldtype": "Data",
+   "label": "Claims Email",
+   "options": "Email",
+   "description": "Disputes and reminders are emailed here"
+  },
+  {
+   "fieldname": "claims_cc",
+   "fieldtype": "Data",
+   "label": "Claims CC",
+   "description": "Comma-separated emails"
   }
  ],
  "issingle": 0,

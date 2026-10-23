@@ -36,7 +36,17 @@
   "claim_amount",
   "dispute_status",
   "col_break_dispute",
-  "dispute_raised_on"
+  "dispute_raised_on",
+  "dispute_follow_section",
+  "claim_sent_on",
+  "claim_sent_to",
+  "claim_reference",
+  "col_break_follow",
+  "agreed_amount",
+  "recovered_amount",
+  "next_follow_up",
+  "last_reminder_on",
+  "stage_log"
  ],
  "fields": [
   {
@@ -198,7 +208,7 @@
    "fieldname": "dispute_status",
    "fieldtype": "Select",
    "label": "Dispute Status",
-   "options": "Not raised\nRaised with Courier\nResolved\nRejected",
+   "options": "Not raised\nRaised with Courier\nSent to courier\nCourier replied\nAccepted\nPartly accepted\nRejected\nRefunded\nResolved",
    "default": "Not raised",
    "in_standard_filter": 1
   },
@@ -210,6 +220,62 @@
    "fieldname": "dispute_raised_on",
    "fieldtype": "Date",
    "label": "Dispute Raised On"
+  },
+  {
+   "fieldname": "dispute_follow_section",
+   "fieldtype": "Section Break",
+   "label": "Claim & Recovery"
+  },
+  {
+   "fieldname": "claim_sent_on",
+   "fieldtype": "Datetime",
+   "label": "Claim Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "claim_sent_to",
+   "fieldtype": "Data",
+   "label": "Claim Sent To",
+   "read_only": 1
+  },
+  {
+   "fieldname": "claim_reference",
+   "fieldtype": "Data",
+   "label": "Courier Ticket / Reference"
+  },
+  {
+   "fieldname": "col_break_follow",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "agreed_amount",
+   "fieldtype": "Currency",
+   "label": "Agreed Amount",
+   "description": "Amount the courier agreed to refund"
+  },
+  {
+   "fieldname": "recovered_amount",
+   "fieldtype": "Currency",
+   "label": "Recovered Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "next_follow_up",
+   "fieldtype": "Date",
+   "label": "Next Follow-up"
+  },
+  {
+   "fieldname": "last_reminder_on",
+   "fieldtype": "Date",
+   "label": "Last Reminder On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "stage_log",
+   "fieldtype": "Table",
+   "label": "Stage Log",
+   "options": "Dispute Stage Log",
+   "read_only": 1
   }
  ],
  "issingle": 0,

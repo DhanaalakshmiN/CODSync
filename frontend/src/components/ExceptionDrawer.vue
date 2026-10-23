@@ -20,6 +20,10 @@ const outcome = ref("");
 const assignee = ref("");
 const busy = ref("");
 const formError = ref("");
+const dStage = ref("");
+const dAgreed = ref("");
+const dRef = ref("");
+const dNote = ref("");
 
 const load = async () => {
 	loading.value = true;
@@ -30,6 +34,10 @@ const load = async () => {
 		claim.value = d.value.dispute.suggested_claim || "";
 		assignee.value = d.value.header.assignee || "";
 		note.value = line.value = parcel.value = outcome.value = formError.value = "";
+		dStage.value = "";
+		dAgreed.value = d.value.dispute.agreed_amount || "";
+		dRef.value = d.value.dispute.claim_reference || "";
+		dNote.value = "";
 	} catch (e) {
 		d.value = null;
 		error.value = e.message;
@@ -61,7 +69,7 @@ const userOpts = computed(() => [
 const matchByLine = computed(() => !!h.value?.order_id);
 
 const LABELS = {
-	raise_dispute: "Raise dispute",
+	raise_dispute: "Marked as disputed",
 	accept_deduction: "Accept deduction",
 	match_line: "Match",
 	resolve_manually: "Mark resolved",
@@ -102,6 +110,47 @@ const submit = async () => {
 		matchByLine.value ? (p.line = line.value) : (p.parcel = parcel.value);
 	if (action.value === "resolve_manually" && outcome.value) p.dispute_outcome = outcome.value;
 	if (await send(action.value, p, `${LABELS[action.value]}: done`)) closeDrawer();
+};
+const sendClaim = async () => {
+	busy.value = "claim";
+	formError.value = "";
+	try {
+		const names = [state.drawer.name];
+		const [pv] = await api.preview_claim({ names }, { silent: true });
+		if (!confirm(`Email claim of ${rs(pv.total)} to ${pv.to}?\n\n${pv.subject}`)) return;
+		await api.send_claim({ names }, { silent: true });
+		toast("Claim emailed to the courier");
+		refresh();
+		await load();
+	} catch (e) {
+		formError.value = e.message;
+	} finally {
+		busy.value = "";
+	}
+};
+const saveStage = async () => {
+	if (!dStage.value) return (formError.value = "Choose the new dispute stage");
+	busy.value = "stage";
+	formError.value = "";
+	try {
+		await api.set_dispute_stage(
+			{
+				name: state.drawer.name,
+				stage: dStage.value,
+				note: dNote.value || null,
+				agreed_amount: dAgreed.value === "" ? null : Number(dAgreed.value),
+				claim_reference: dRef.value || null,
+			},
+			{ silent: true }
+		);
+		toast("Dispute updated");
+		refresh();
+		await load();
+	} catch (e) {
+		formError.value = e.message;
+	} finally {
+		busy.value = "";
+	}
 };
 const assign = async (u) => {
 	assignee.value = u;
@@ -171,9 +220,63 @@ const assign = async (u) => {
 						<dd>
 							{{ d.dispute.status }} · claim {{ rs(d.dispute.claim_amount) }} ·
 							{{ d.dispute.raised_on }}
-						</dd></template
-					>
+						</dd>
+						<template v-if="d.dispute.claim_sent_on"
+							><dt>Claim sent</dt>
+							<dd>{{ dShortTime(d.dispute.claim_sent_on) }} to {{ d.dispute.claim_sent_to }}</dd></template
+						>
+						<template v-if="d.dispute.next_follow_up"
+							><dt>Follow-up</dt>
+							<dd>
+								{{ d.dispute.next_follow_up }}
+								<Badge v-if="d.dispute.overdue" kind="mis" nd>Overdue</Badge>
+							</dd></template
+						>
+						<template v-if="d.dispute.agreed_amount"
+							><dt>Agreed</dt>
+							<dd>{{ rs(d.dispute.agreed_amount) }}</dd></template
+						>
+						<template v-if="d.dispute.recovered_amount"
+							><dt>Recovered</dt>
+							<dd>{{ rs(d.dispute.recovered_amount) }}</dd></template
+						>
+					</template>
 				</dl>
+
+				<!-- dispute: send claim, record the courier's answer -->
+				<div v-if="open && d.dispute.can_send" style="display: flex; flex-direction: column; gap: 8px">
+					<div class="muted" style="font-size: 12px; letter-spacing: 0.06em">DISPUTE</div>
+					<div>
+						<button class="btn" :disabled="busy === 'claim'" @click="sendClaim">
+							{{ d.dispute.claim_sent_on ? "Re-send claim" : "Send claim to courier" }}
+						</button>
+					</div>
+					<template v-if="d.dispute.status !== 'Not raised'">
+						<SelectField
+							v-model="dStage"
+							:options="d.dispute.stages"
+							placeholder="Courier's answer / new stage"
+							aria-label="Dispute stage"
+							style="max-width: none"
+						/>
+						<input v-model="dAgreed" class="inpl" type="number" min="0" step="0.01" placeholder="Agreed refund amount" aria-label="Agreed amount" />
+						<input v-model="dRef" class="inpl" placeholder="Courier ticket / reference" aria-label="Courier reference" />
+						<input v-model="dNote" class="inpl" placeholder="Note" aria-label="Dispute note" />
+						<div>
+							<button class="btn" :disabled="busy === 'stage'" @click="saveStage">Update dispute</button>
+						</div>
+						<ul v-if="d.dispute.log.length" class="tl" style="padding: 0">
+							<li v-for="(l, i) in d.dispute.log" :key="i">
+								<span class="m g"></span>
+								<div>
+									<strong>{{ l.stage }}</strong>
+									<div v-if="l.note" class="muted">{{ l.note }}</div>
+								</div>
+								<span class="w">{{ dShortTime(l.on) }}</span>
+							</li>
+						</ul>
+					</template>
+				</div>
 
 				<!-- assign -->
 				<div>
@@ -252,7 +355,7 @@ const assign = async (u) => {
 					<div
 						v-if="
 							action === 'resolve_manually' &&
-							d.dispute.status === 'Raised with Courier'
+							d.dispute.status !== 'Not raised' && d.dispute.status !== 'Rejected'
 						"
 						style="display: flex; flex-direction: column; gap: 4px"
 					>

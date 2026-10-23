@@ -47,7 +47,7 @@
    "fieldname": "operation",
    "fieldtype": "Select",
    "label": "Operation",
-   "options": "Test Connection\nWebhook Order\nOrder Sync\nTracking Sync\nSettlement Sync\nExcel Import\nReconciliation\nCurrency Rate\nOther",
+   "options": "Test Connection\nWebhook Order\nOrder Sync\nTracking Sync\nSettlement Sync\nExcel Import\nReconciliation\nCurrency Rate\nDispute\nOther",
    "reqd": 1,
    "in_list_view": 1,
    "in_standard_filter": 1

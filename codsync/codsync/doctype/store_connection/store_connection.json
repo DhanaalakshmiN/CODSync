@@ -54,6 +54,8 @@
   "max_rate_age_days",
   "fx_tolerance_amount",
   "fx_tolerance_percent",
+  "dispute_section",
+  "claim_follow_up_days",
   "status_section",
   "last_test_status",
   "col_break_status",
@@ -378,6 +380,19 @@
    "label": "Foreign Order Tolerance (%)",
    "default": "0.5",
    "description": "Tolerance = the larger of amount and % of expected. Only for orders not in the base currency"
+  },
+  {
+   "fieldname": "dispute_section",
+   "fieldtype": "Section Break",
+   "label": "Disputes",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "claim_follow_up_days",
+   "fieldtype": "Int",
+   "label": "Claim Follow-up (days)",
+   "default": "7",
+   "description": "Days after a claim is sent before a reminder goes out"
   }
  ],
  "in_create": 1,

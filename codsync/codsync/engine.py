@@ -6,6 +6,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_to_date, cint, flt, get_datetime, today
 
+from codsync.codsync import disputes
 from codsync.codsync.currency import get_currency_precision
 
 EXCEPTION_TYPE_BY_PAYOUT = {
@@ -291,6 +292,7 @@ def reconcile_line(line, parcel):
 			**common,
 		)
 	else:
+		disputes.close_on_settlement(parcel.name, actual, batch.name)
 		cleared = resolve_exceptions(
 			"Missing settlement", parcel.name, "Settlement received within tolerance"
 		)
@@ -369,6 +371,19 @@ def reconcile_remittance(remittance_name):
 				parcel = frappe.get_doc("COD Parcel", names[0])
 				if (parcel.payment_mode or "COD") == "Prepaid":
 					outcome, reason = "ambiguous", f"Parcel {parcel.name} is Prepaid, not a COD order"
+				elif (
+					parcel.settlement_batch
+					and parcel.settlement_batch != remittance.name
+					and line.cod_parcel == parcel.name
+				):
+					# this line was already applied as a refund by an earlier matching run
+					outcome, reason = "refund_done", None
+				elif (
+					parcel.settlement_batch
+					and parcel.settlement_batch != remittance.name
+					and disputes.open_dispute_for(parcel.name)
+				):
+					outcome, reason = "refund", None
 				elif parcel.settlement_batch and parcel.settlement_batch != remittance.name:
 					outcome, reason = (
 						"ambiguous",
@@ -376,6 +391,19 @@ def reconcile_remittance(remittance_name):
 					)
 				else:
 					outcome, reason = "matched", None
+
+		if outcome == "refund_done":
+			seen[awb] = row
+			counts["matched"] += 1
+			continue
+
+		if outcome == "refund":
+			# a later payment for an already-settled parcel with an open dispute is the refund
+			seen[awb] = row
+			result = disputes.apply_refund(disputes.open_dispute_for(parcel.name), line, parcel)
+			counts["matched"] += 1
+			cleared += 1 if result["refunded"] else 0
+			continue
 
 		if outcome == "matched":
 			seen[awb] = row
