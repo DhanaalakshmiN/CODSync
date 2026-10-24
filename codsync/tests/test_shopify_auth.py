@@ -178,6 +178,18 @@ class TestAuthHook(ShopifyCase):
 		self.run_hook(make_token()).assert_called_once_with(email)
 		self.assertEqual(frappe.db.get_value("User", email, "enabled"), 1)
 
+	def test_request_arguments_survive_the_login(self):
+		# regression: frappe.set_user wipes form_dict, so every call lost its arguments
+		# ("order_detail() missing 1 required positional argument: 'order_id'")
+		sa.ensure_shop_user(SHOP)
+		frappe.db.set_single_value("Store Connection", {"enabled": 1, "store_url": SHOP}, None)
+		frappe.clear_document_cache("Store Connection", "Store Connection")
+		frappe.local.form_dict = frappe._dict(order_id="ORD-1", cmd="x")
+		with patch("frappe.get_request_header", return_value=make_token()):
+			sa.authenticate()
+		self.assertEqual(frappe.session.user, sa.shop_user(SHOP))
+		self.assertEqual(dict(frappe.local.form_dict), {"order_id": "ORD-1", "cmd": "x"})
+
 	def test_bad_token_is_an_error_not_a_silent_guest(self):
 		with self.assertRaises(frappe.AuthenticationError):
 			self.run_hook(make_token(secret="other"))
