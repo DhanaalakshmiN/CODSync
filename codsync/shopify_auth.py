@@ -30,7 +30,8 @@ SHOP_ROLE = "CODSync Manager"
 USER_DOMAIN = "shops.codsync.local"
 # Shopify offline tokens do not expire; the adapter treats a far-future expiry as "keep using it"
 OFFLINE_TOKEN_YEARS = 10
-WEBHOOK_TOPICS = ("orders/create", "app/uninstalled")
+# NOTE: Shopify spells this topic "orders/cancelled" (two L's); anything else is rejected with 422
+WEBHOOK_TOPICS = ("orders/create", "orders/updated", "orders/cancelled", "app/uninstalled")
 COMPLIANCE_TOPICS = ("customers/data_request", "customers/redact", "shop/redact")
 
 
