@@ -167,6 +167,7 @@ scheduler_events = {
 		"codsync.codsync.engine.run_hourly_settlement_sync",
 	],
 	"daily": [
+		"codsync.codsync.tasks.run_daily_order_sync",
 		"codsync.codsync.tasks.run_daily_mark_missing",
 		"codsync.codsync.tasks.run_daily_reconciliation",
 		"codsync.codsync.disputes.send_follow_ups",
