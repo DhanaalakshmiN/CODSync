@@ -306,7 +306,7 @@ const syncAll = async () => {
 				<span class="muted">{{ detailError }}</span>
 			</div>
 			<template v-else-if="detail">
-				<dl class="kvl" style="padding: 16px 16px 0">
+				<dl class="kvl cols" style="padding: 16px 16px 0">
 					<div>
 						<dt>Delivery status</dt>
 						<dd>

@@ -109,7 +109,7 @@ const downloadCsv = async () => {
 				</div>
 
 				<section class="card" aria-label="Batch summary">
-					<dl class="kvl" style="padding: 16px">
+					<dl class="kvl cols" style="padding: 16px">
 						<div>
 							<dt>Courier</dt>
 							<dd>{{ d.courier }}</dd>
