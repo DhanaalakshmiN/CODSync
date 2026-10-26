@@ -60,3 +60,7 @@ a.store, a.store:hover { text-decoration: none; color: #fff; }
 .maprow { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-top: 8px; align-items: center; }
 .imp-banner.ok { background: #e4f5ec; color: #0c5b3f; }
 @media (max-width: 760px) { .setrow { grid-template-columns: 1fr; gap: 8px; } .maprow { grid-template-columns: 1fr auto; } }
+/* kvl cards whose dt/dd pairs are wrapped in divs (Settlement summary, Shipment drawer):
+   even label-over-value cells instead of the bare auto 1fr pair grid */
+.kvl.cols { grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 10px 16px; }
+.kvl.cols dd { text-align: left; }
