@@ -6,6 +6,39 @@ from codsync.codsync.engine import run_reconciliation
 from codsync.codsync.matching import mark_missing
 
 
+def run_hourly_failure_alert():
+	"""Hourly scheduler job: email a digest of the last hour's Failed Sync Log rows."""
+	from frappe.utils import add_to_date, now_datetime
+
+	rows = frappe.get_all(
+		"Sync Log",
+		filters={"status": "Failed", "creation": [">", add_to_date(now_datetime(), hours=-1)]},
+		fields=["creation", "platform", "operation", "error_message", "endpoint", "external_id"],
+		order_by="creation desc",
+		limit=50,
+	)
+	if not rows:
+		return
+	recipient = frappe.db.get_single_value("Store Connection", "alert_email") or frappe.db.get_value(
+		"User", "Administrator", "email"
+	)
+	lines = []
+	for r in rows:
+		head = f"{r.creation} | {r.platform} {r.operation}"
+		if r.external_id:
+			head += f" | {r.external_id}"
+		if r.endpoint:
+			head += f" | {r.endpoint}"
+		lines.append(head + (f"\n    {r.error_message}" if r.error_message else ""))
+	frappe.sendmail(
+		recipients=[recipient],
+		subject=f"[CODSync] {len(rows)} sync failure(s) in the last hour",
+		message="<pre style='font-size:12px'>"
+		+ frappe.utils.escape_html("\n".join(lines))
+		+ "</pre>",
+	)
+
+
 def run_daily_order_sync():
 	"""Daily scheduler job: re-pull orders from the connected store.
 

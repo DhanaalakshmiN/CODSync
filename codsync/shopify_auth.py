@@ -314,6 +314,41 @@ def revoke_shop(shop):
 		frappe.db.set_value("User", email, "enabled", 0)
 
 
+def _email_data_request(shop, payload):
+	"""Forward a customers/data_request webhook to the merchant (alert email) with the
+	data CODSync holds for that customer. Returns a short result string for the log."""
+	customer = payload.get("customer") or {}
+	email = (customer.get("email") or "").strip()
+	parcels = []
+	if email:
+		parcels = frappe.get_all(
+			"COD Parcel",
+			filters={"email": email},
+			fields=["name", "order_date", "customer_name", "phone", "city", "pincode", "order_total", "payment_mode", "order_status"],
+			order_by="order_date desc",
+			limit=100,
+		)
+	recipient = frappe.db.get_single_value("Store Connection", "alert_email") or frappe.db.get_value(
+		"User", "Administrator", "email"
+	)
+	lines = [f"Shopify sent a customer data request for {shop}."]
+	lines.append(f"Customer: {customer.get('first_name', '')} {customer.get('last_name', '')} <{email or 'no email'}>")
+	lines.append(f"Orders_customer_id: {payload.get('orders_customer_id')}")
+	lines.append(f"\nCODSync holds {len(parcels)} order(s) for this customer:")
+	for p in parcels:
+		lines.append(
+			f"  {p.name} | {p.order_date} | {p.payment_mode} | {p.order_status} | {p.order_total}"
+			f" | {p.customer_name} | {p.phone} | {p.city} {p.pincode or ''}"
+		)
+	lines.append("\nReply to the customer with this data within 30 days (Shopify GDPR policy).")
+	frappe.sendmail(
+		recipients=[recipient],
+		subject=f"[CODSync] Customer data request for {shop}",
+		message="<pre style='font-size:12px'>" + frappe.utils.escape_html("\n".join(lines)) + "</pre>",
+	)
+	return f"data request emailed to {recipient} ({len(parcels)} order(s))"
+
+
 def handle_topic(topic, shop, payload):
 	"""Act on a verified webhook. Returns a short result string for the log."""
 	if topic == "app/uninstalled":
@@ -326,7 +361,11 @@ def handle_topic(topic, shop, payload):
 		revoke_shop(shop)
 		return f"shop data redacted ({anonymise_orders()} order(s) anonymised)"
 	if topic == "customers/data_request":
-		return "data request logged"
+		try:
+			return _email_data_request(shop, payload)
+		except Exception as e:
+			frappe.log_error(frappe.get_traceback(), "CODSync data request email")
+			return f"data request logged (email failed: {e})"
 	return "ignored"
 
 

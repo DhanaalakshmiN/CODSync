@@ -161,10 +161,14 @@ website_route_rules = [
 	{"from_route": "/cod-ledger/<path:app_path>", "to_route": "cod-ledger"},
 ]
 
+# auto-delete Sync Log rows older than 90 days (Log Settings daily job)
+default_log_clearing_doctypes = {"Sync Log": 90}
+
 scheduler_events = {
 	"hourly": [
-		"codsync.codsync.tracking.run_hourly_tracking",
+		"codsync.codsync.tasks.run_hourly_tracking",
 		"codsync.codsync.engine.run_hourly_settlement_sync",
+		"codsync.codsync.tasks.run_hourly_failure_alert",
 	],
 	"daily": [
 		"codsync.codsync.tasks.run_daily_order_sync",

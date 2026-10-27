@@ -1,435 +1,443 @@
 {
- "actions": [],
- "allow_rename": 0,
- "creation": "2026-10-13 00:00:00.000000",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "connection_section",
-  "platform",
-  "col_break_connection",
-  "enabled",
-  "store_url",
-  "store_name",
-  "shopify_section",
-  "shopify_client_id",
-  "col_break_shopify",
-  "shopify_client_secret",
-  "shopify_api_version",
-  "woocommerce_section",
-  "woo_consumer_key",
-  "col_break_woo",
-  "woo_consumer_secret",
-  "woo_api_version",
-  "odoo_section",
-  "odoo_database",
-  "col_break_odoo",
-  "odoo_username",
-  "odoo_api_key",
-  "webhook_section",
-  "webhook_secret",
-  "col_break_webhook",
-  "cod_keyword",
-  "cod_tag",
-  "token_section",
-  "access_token",
-  "col_break_token",
-  "token_expiry",
-  "defaults_section",
-  "default_courier",
-  "tolerance",
-  "col_break_defaults",
-  "default_payout_cycle_days",
-  "courier_mapping",
-  "currency_section",
-  "base_currency",
-  "rate_provider",
-  "rate_provider_url",
-  "fallback_rate_provider_url",
-  "rate_api_key",
-  "col_break_currency",
-  "rate_cache_seconds",
-  "rate_timeout_seconds",
-  "max_rate_age_days",
-  "fx_tolerance_amount",
-  "fx_tolerance_percent",
-  "dispute_section",
-  "claim_follow_up_days",
-  "status_section",
-  "last_test_status",
-  "col_break_status",
-  "last_tested_on",
-  "last_synced_on"
- ],
- "fields": [
-  {
-   "fieldname": "connection_section",
-   "fieldtype": "Section Break",
-   "label": "Connection"
-  },
-  {
-   "fieldname": "platform",
-   "fieldtype": "Select",
-   "label": "Platform",
-   "options": "\nShopify\nWooCommerce\nOdoo",
-   "reqd": 1
-  },
-  {
-   "fieldname": "col_break_connection",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "enabled",
-   "fieldtype": "Check",
-   "label": "Enabled"
-  },
-  {
-   "fieldname": "store_url",
-   "fieldtype": "Data",
-   "label": "Store URL",
-   "reqd": 1,
-   "description": "Shopify: vanam-organics.myshopify.com · WooCommerce: https://shop.com · Odoo: https://company.odoo.com"
-  },
-  {
-   "fieldname": "store_name",
-   "fieldtype": "Data",
-   "label": "Store Name"
-  },
-  {
-   "fieldname": "shopify_section",
-   "fieldtype": "Section Break",
-   "label": "Shopify Credentials",
-   "depends_on": "eval:doc.platform=='Shopify'"
-  },
-  {
-   "fieldname": "shopify_client_id",
-   "fieldtype": "Data",
-   "label": "Client ID",
-   "depends_on": "eval:doc.platform=='Shopify'",
-   "mandatory_depends_on": "eval:doc.platform=='Shopify'"
-  },
-  {
-   "fieldname": "col_break_shopify",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "shopify_client_secret",
-   "fieldtype": "Password",
-   "label": "Client Secret",
-   "depends_on": "eval:doc.platform=='Shopify'",
-   "mandatory_depends_on": "eval:doc.platform=='Shopify'"
-  },
-  {
-   "fieldname": "shopify_api_version",
-   "fieldtype": "Data",
-   "label": "API Version",
-   "default": "2026-10",
-   "depends_on": "eval:doc.platform=='Shopify'"
-  },
-  {
-   "fieldname": "woocommerce_section",
-   "fieldtype": "Section Break",
-   "label": "WooCommerce Credentials",
-   "depends_on": "eval:doc.platform=='WooCommerce'"
-  },
-  {
-   "fieldname": "woo_consumer_key",
-   "fieldtype": "Data",
-   "label": "Consumer Key",
-   "depends_on": "eval:doc.platform=='WooCommerce'",
-   "mandatory_depends_on": "eval:doc.platform=='WooCommerce'"
-  },
-  {
-   "fieldname": "col_break_woo",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "woo_consumer_secret",
-   "fieldtype": "Password",
-   "label": "Consumer Secret",
-   "depends_on": "eval:doc.platform=='WooCommerce'",
-   "mandatory_depends_on": "eval:doc.platform=='WooCommerce'"
-  },
-  {
-   "fieldname": "woo_api_version",
-   "fieldtype": "Data",
-   "label": "API Version",
-   "default": "wc/v3",
-   "depends_on": "eval:doc.platform=='WooCommerce'"
-  },
-  {
-   "fieldname": "odoo_section",
-   "fieldtype": "Section Break",
-   "label": "Odoo Credentials",
-   "depends_on": "eval:doc.platform=='Odoo'"
-  },
-  {
-   "fieldname": "odoo_database",
-   "fieldtype": "Data",
-   "label": "Database",
-   "depends_on": "eval:doc.platform=='Odoo'",
-   "mandatory_depends_on": "eval:doc.platform=='Odoo'"
-  },
-  {
-   "fieldname": "col_break_odoo",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "odoo_username",
-   "fieldtype": "Data",
-   "label": "Username",
-   "depends_on": "eval:doc.platform=='Odoo'",
-   "mandatory_depends_on": "eval:doc.platform=='Odoo'"
-  },
-  {
-   "fieldname": "odoo_api_key",
-   "fieldtype": "Password",
-   "label": "API Key",
-   "depends_on": "eval:doc.platform=='Odoo'",
-   "mandatory_depends_on": "eval:doc.platform=='Odoo'"
-  },
-  {
-   "fieldname": "webhook_section",
-   "fieldtype": "Section Break",
-   "label": "Webhook",
-   "depends_on": "eval:doc.platform!='Odoo'"
-  },
-  {
-   "fieldname": "webhook_secret",
-   "fieldtype": "Password",
-   "label": "Webhook Secret",
-   "depends_on": "eval:doc.platform!='Odoo'",
-   "description": "Shopify store-webhook signing secret or WooCommerce webhook secret"
-  },
-  {
-   "fieldname": "col_break_webhook",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "cod_keyword",
-   "fieldtype": "Data",
-   "label": "COD Keyword",
-   "default": "cash on delivery",
-   "depends_on": "eval:doc.platform!='Odoo'"
-  },
-  {
-   "fieldname": "cod_tag",
-   "fieldtype": "Data",
-   "label": "COD Tag",
-   "default": "COD",
-   "depends_on": "eval:doc.platform!='Odoo'"
-  },
-  {
-   "fieldname": "token_section",
-   "fieldtype": "Section Break",
-   "label": "Token",
-   "collapsible": 1,
-   "collapsible_depends_on": "eval:0"
-  },
-  {
-   "fieldname": "access_token",
-   "fieldtype": "Password",
-   "label": "Access Token",
-   "read_only": 1,
-   "hidden": 1
-  },
-  {
-   "fieldname": "col_break_token",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "token_expiry",
-   "fieldtype": "Datetime",
-   "label": "Token Expiry",
-   "read_only": 1
-  },
-  {
-   "fieldname": "defaults_section",
-   "fieldtype": "Section Break",
-   "label": "Defaults"
-  },
-  {
-   "fieldname": "default_courier",
-   "fieldtype": "Link",
-   "label": "Default Courier",
-   "options": "Courier"
-  },
-  {
-   "fieldname": "tolerance",
-   "fieldtype": "Currency",
-   "label": "Tolerance",
-   "default": "1.00",
-   "description": "Differences within this amount are treated as Paid"
-  },
-  {
-   "fieldname": "col_break_defaults",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "default_payout_cycle_days",
-   "fieldtype": "Int",
-   "label": "Default Payout Cycle Days",
-   "default": "7"
-  },
-  {
-   "fieldname": "courier_mapping",
-   "fieldtype": "Table",
-   "label": "Courier Mapping",
-   "options": "Store Courier Map"
-  },
-  {
-   "fieldname": "status_section",
-   "fieldtype": "Section Break",
-   "label": "Status"
-  },
-  {
-   "fieldname": "last_test_status",
-   "fieldtype": "Data",
-   "label": "Last Test Status",
-   "read_only": 1
-  },
-  {
-   "fieldname": "col_break_status",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "last_tested_on",
-   "fieldtype": "Datetime",
-   "label": "Last Tested On",
-   "read_only": 1
-  },
-  {
-   "fieldname": "last_synced_on",
-   "fieldtype": "Datetime",
-   "label": "Last Synced On",
-   "read_only": 1
-  },
-  {
-   "fieldname": "currency_section",
-   "fieldtype": "Section Break",
-   "label": "Currency",
-   "collapsible": 1
-  },
-  {
-   "fieldname": "base_currency",
-   "fieldtype": "Link",
-   "label": "Base Currency",
-   "options": "Currency",
-   "description": "Amounts are stored in this currency. Blank = system default currency (or INR)"
-  },
-  {
-   "fieldname": "rate_provider",
-   "fieldtype": "Select",
-   "label": "Rate Provider",
-   "options": "Frankfurter\nOpen ER API\nManual",
-   "default": "Frankfurter",
-   "description": "The other provider is tried if this one fails. Manual = only Currency Rate rows"
-  },
-  {
-   "fieldname": "rate_provider_url",
-   "fieldtype": "Data",
-   "label": "Rate Provider URL",
-   "description": "Blank = the provider default. {date} / {base} are replaced"
-  },
-  {
-   "fieldname": "fallback_rate_provider_url",
-   "fieldtype": "Data",
-   "label": "Second Provider URL",
-   "description": "Blank = the provider default"
-  },
-  {
-   "fieldname": "rate_api_key",
-   "fieldtype": "Password",
-   "label": "Rate Provider API Key",
-   "description": "Optional, for providers that need one"
-  },
-  {
-   "fieldname": "col_break_currency",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "rate_cache_seconds",
-   "fieldtype": "Int",
-   "label": "Rate Cache (seconds)",
-   "default": "86400"
-  },
-  {
-   "fieldname": "rate_timeout_seconds",
-   "fieldtype": "Int",
-   "label": "Rate Request Timeout (seconds)",
-   "default": "15"
-  },
-  {
-   "fieldname": "max_rate_age_days",
-   "fieldtype": "Int",
-   "label": "Max Rate Age (days)",
-   "default": "7",
-   "description": "A stored rate older than this is not used when providers fail"
-  },
-  {
-   "fieldname": "fx_tolerance_amount",
-   "fieldtype": "Currency",
-   "label": "Foreign Order Tolerance (amount)",
-   "default": "1.00",
-   "description": "In base currency"
-  },
-  {
-   "fieldname": "fx_tolerance_percent",
-   "fieldtype": "Percent",
-   "label": "Foreign Order Tolerance (%)",
-   "default": "0.5",
-   "description": "Tolerance = the larger of amount and % of expected. Only for orders not in the base currency"
-  },
-  {
-   "fieldname": "dispute_section",
-   "fieldtype": "Section Break",
-   "label": "Disputes",
-   "collapsible": 1
-  },
-  {
-   "fieldname": "claim_follow_up_days",
-   "fieldtype": "Int",
-   "label": "Claim Follow-up (days)",
-   "default": "7",
-   "description": "Days after a claim is sent before a reminder goes out"
-  }
- ],
- "in_create": 1,
- "issingle": 1,
- "links": [],
- "modified": "2026-10-13 00:00:00.000000",
- "modified_by": "Administrator",
- "module": "CODSync",
- "name": "Store Connection",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 0,
-   "email": 0,
-   "export": 0,
-   "print": 0,
-   "read": 1,
-   "report": 0,
-   "role": "System Manager",
-   "share": 0,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 0,
-   "email": 0,
-   "export": 0,
-   "print": 0,
-   "read": 1,
-   "report": 0,
-   "role": "CODSync Manager",
-   "share": 0,
-   "write": 1
-  }
- ],
- "sort_field": "modified",
- "sort_order": "DESC",
- "track_changes": 1
+	"actions": [],
+	"allow_rename": 0,
+	"creation": "2026-10-13 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"connection_section",
+		"platform",
+		"col_break_connection",
+		"enabled",
+		"store_url",
+		"store_name",
+		"shopify_section",
+		"shopify_client_id",
+		"col_break_shopify",
+		"shopify_client_secret",
+		"shopify_api_version",
+		"woocommerce_section",
+		"woo_consumer_key",
+		"col_break_woo",
+		"woo_consumer_secret",
+		"woo_api_version",
+		"odoo_section",
+		"odoo_database",
+		"col_break_odoo",
+		"odoo_username",
+		"odoo_api_key",
+		"webhook_section",
+		"webhook_secret",
+		"col_break_webhook",
+		"cod_keyword",
+		"cod_tag",
+		"token_section",
+		"access_token",
+		"col_break_token",
+		"token_expiry",
+		"defaults_section",
+		"default_courier",
+		"tolerance",
+		"col_break_defaults",
+		"default_payout_cycle_days",
+		"courier_mapping",
+		"currency_section",
+		"base_currency",
+		"rate_provider",
+		"rate_provider_url",
+		"fallback_rate_provider_url",
+		"rate_api_key",
+		"col_break_currency",
+		"rate_cache_seconds",
+		"rate_timeout_seconds",
+		"max_rate_age_days",
+		"fx_tolerance_amount",
+		"fx_tolerance_percent",
+		"dispute_section",
+		"claim_follow_up_days",
+		"alert_email",
+		"status_section",
+		"last_test_status",
+		"col_break_status",
+		"last_tested_on",
+		"last_synced_on"
+	],
+	"fields": [
+		{
+			"fieldname": "connection_section",
+			"fieldtype": "Section Break",
+			"label": "Connection"
+		},
+		{
+			"fieldname": "platform",
+			"fieldtype": "Select",
+			"label": "Platform",
+			"options": "\nShopify\nWooCommerce\nOdoo",
+			"reqd": 1
+		},
+		{
+			"fieldname": "col_break_connection",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "enabled",
+			"fieldtype": "Check",
+			"label": "Enabled"
+		},
+		{
+			"fieldname": "store_url",
+			"fieldtype": "Data",
+			"label": "Store URL",
+			"reqd": 1,
+			"description": "Shopify: vanam-organics.myshopify.com · WooCommerce: https://shop.com · Odoo: https://company.odoo.com"
+		},
+		{
+			"fieldname": "store_name",
+			"fieldtype": "Data",
+			"label": "Store Name"
+		},
+		{
+			"fieldname": "shopify_section",
+			"fieldtype": "Section Break",
+			"label": "Shopify Credentials",
+			"depends_on": "eval:doc.platform=='Shopify'"
+		},
+		{
+			"fieldname": "shopify_client_id",
+			"fieldtype": "Data",
+			"label": "Client ID",
+			"depends_on": "eval:doc.platform=='Shopify'",
+			"mandatory_depends_on": "eval:doc.platform=='Shopify'"
+		},
+		{
+			"fieldname": "col_break_shopify",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "shopify_client_secret",
+			"fieldtype": "Password",
+			"label": "Client Secret",
+			"depends_on": "eval:doc.platform=='Shopify'",
+			"mandatory_depends_on": "eval:doc.platform=='Shopify'"
+		},
+		{
+			"fieldname": "shopify_api_version",
+			"fieldtype": "Data",
+			"label": "API Version",
+			"default": "2026-10",
+			"depends_on": "eval:doc.platform=='Shopify'"
+		},
+		{
+			"fieldname": "woocommerce_section",
+			"fieldtype": "Section Break",
+			"label": "WooCommerce Credentials",
+			"depends_on": "eval:doc.platform=='WooCommerce'"
+		},
+		{
+			"fieldname": "woo_consumer_key",
+			"fieldtype": "Data",
+			"label": "Consumer Key",
+			"depends_on": "eval:doc.platform=='WooCommerce'",
+			"mandatory_depends_on": "eval:doc.platform=='WooCommerce'"
+		},
+		{
+			"fieldname": "col_break_woo",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "woo_consumer_secret",
+			"fieldtype": "Password",
+			"label": "Consumer Secret",
+			"depends_on": "eval:doc.platform=='WooCommerce'",
+			"mandatory_depends_on": "eval:doc.platform=='WooCommerce'"
+		},
+		{
+			"fieldname": "woo_api_version",
+			"fieldtype": "Data",
+			"label": "API Version",
+			"default": "wc/v3",
+			"depends_on": "eval:doc.platform=='WooCommerce'"
+		},
+		{
+			"fieldname": "odoo_section",
+			"fieldtype": "Section Break",
+			"label": "Odoo Credentials",
+			"depends_on": "eval:doc.platform=='Odoo'"
+		},
+		{
+			"fieldname": "odoo_database",
+			"fieldtype": "Data",
+			"label": "Database",
+			"depends_on": "eval:doc.platform=='Odoo'",
+			"mandatory_depends_on": "eval:doc.platform=='Odoo'"
+		},
+		{
+			"fieldname": "col_break_odoo",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "odoo_username",
+			"fieldtype": "Data",
+			"label": "Username",
+			"depends_on": "eval:doc.platform=='Odoo'",
+			"mandatory_depends_on": "eval:doc.platform=='Odoo'"
+		},
+		{
+			"fieldname": "odoo_api_key",
+			"fieldtype": "Password",
+			"label": "API Key",
+			"depends_on": "eval:doc.platform=='Odoo'",
+			"mandatory_depends_on": "eval:doc.platform=='Odoo'"
+		},
+		{
+			"fieldname": "webhook_section",
+			"fieldtype": "Section Break",
+			"label": "Webhook",
+			"depends_on": "eval:doc.platform!='Odoo'"
+		},
+		{
+			"fieldname": "webhook_secret",
+			"fieldtype": "Password",
+			"label": "Webhook Secret",
+			"depends_on": "eval:doc.platform!='Odoo'",
+			"description": "Shopify store-webhook signing secret or WooCommerce webhook secret"
+		},
+		{
+			"fieldname": "col_break_webhook",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "cod_keyword",
+			"fieldtype": "Data",
+			"label": "COD Keyword",
+			"default": "cash on delivery",
+			"depends_on": "eval:doc.platform!='Odoo'"
+		},
+		{
+			"fieldname": "cod_tag",
+			"fieldtype": "Data",
+			"label": "COD Tag",
+			"default": "COD",
+			"depends_on": "eval:doc.platform!='Odoo'"
+		},
+		{
+			"fieldname": "token_section",
+			"fieldtype": "Section Break",
+			"label": "Token",
+			"collapsible": 1,
+			"collapsible_depends_on": "eval:0"
+		},
+		{
+			"fieldname": "access_token",
+			"fieldtype": "Password",
+			"label": "Access Token",
+			"read_only": 1,
+			"hidden": 1
+		},
+		{
+			"fieldname": "col_break_token",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "token_expiry",
+			"fieldtype": "Datetime",
+			"label": "Token Expiry",
+			"read_only": 1
+		},
+		{
+			"fieldname": "defaults_section",
+			"fieldtype": "Section Break",
+			"label": "Defaults"
+		},
+		{
+			"fieldname": "default_courier",
+			"fieldtype": "Link",
+			"label": "Default Courier",
+			"options": "Courier"
+		},
+		{
+			"fieldname": "tolerance",
+			"fieldtype": "Currency",
+			"label": "Tolerance",
+			"default": "1.00",
+			"description": "Differences within this amount are treated as Paid"
+		},
+		{
+			"fieldname": "col_break_defaults",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "default_payout_cycle_days",
+			"fieldtype": "Int",
+			"label": "Default Payout Cycle Days",
+			"default": "7"
+		},
+		{
+			"fieldname": "courier_mapping",
+			"fieldtype": "Table",
+			"label": "Courier Mapping",
+			"options": "Store Courier Map"
+		},
+		{
+			"fieldname": "status_section",
+			"fieldtype": "Section Break",
+			"label": "Status"
+		},
+		{
+			"fieldname": "last_test_status",
+			"fieldtype": "Data",
+			"label": "Last Test Status",
+			"read_only": 1
+		},
+		{
+			"fieldname": "col_break_status",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "last_tested_on",
+			"fieldtype": "Datetime",
+			"label": "Last Tested On",
+			"read_only": 1
+		},
+		{
+			"fieldname": "last_synced_on",
+			"fieldtype": "Datetime",
+			"label": "Last Synced On",
+			"read_only": 1
+		},
+		{
+			"fieldname": "currency_section",
+			"fieldtype": "Section Break",
+			"label": "Currency",
+			"collapsible": 1
+		},
+		{
+			"fieldname": "base_currency",
+			"fieldtype": "Link",
+			"label": "Base Currency",
+			"options": "Currency",
+			"description": "Amounts are stored in this currency. Blank = system default currency (or INR)"
+		},
+		{
+			"fieldname": "rate_provider",
+			"fieldtype": "Select",
+			"label": "Rate Provider",
+			"options": "Frankfurter\nOpen ER API\nManual",
+			"default": "Frankfurter",
+			"description": "The other provider is tried if this one fails. Manual = only Currency Rate rows"
+		},
+		{
+			"fieldname": "rate_provider_url",
+			"fieldtype": "Data",
+			"label": "Rate Provider URL",
+			"description": "Blank = the provider default. {date} / {base} are replaced"
+		},
+		{
+			"fieldname": "fallback_rate_provider_url",
+			"fieldtype": "Data",
+			"label": "Second Provider URL",
+			"description": "Blank = the provider default"
+		},
+		{
+			"fieldname": "rate_api_key",
+			"fieldtype": "Password",
+			"label": "Rate Provider API Key",
+			"description": "Optional, for providers that need one"
+		},
+		{
+			"fieldname": "col_break_currency",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "rate_cache_seconds",
+			"fieldtype": "Int",
+			"label": "Rate Cache (seconds)",
+			"default": "86400"
+		},
+		{
+			"fieldname": "rate_timeout_seconds",
+			"fieldtype": "Int",
+			"label": "Rate Request Timeout (seconds)",
+			"default": "15"
+		},
+		{
+			"fieldname": "max_rate_age_days",
+			"fieldtype": "Int",
+			"label": "Max Rate Age (days)",
+			"default": "7",
+			"description": "A stored rate older than this is not used when providers fail"
+		},
+		{
+			"fieldname": "fx_tolerance_amount",
+			"fieldtype": "Currency",
+			"label": "Foreign Order Tolerance (amount)",
+			"default": "1.00",
+			"description": "In base currency"
+		},
+		{
+			"fieldname": "fx_tolerance_percent",
+			"fieldtype": "Percent",
+			"label": "Foreign Order Tolerance (%)",
+			"default": "0.5",
+			"description": "Tolerance = the larger of amount and % of expected. Only for orders not in the base currency"
+		},
+		{
+			"fieldname": "dispute_section",
+			"fieldtype": "Section Break",
+			"label": "Disputes",
+			"collapsible": 1
+		},
+		{
+			"fieldname": "claim_follow_up_days",
+			"fieldtype": "Int",
+			"label": "Claim Follow-up (days)",
+			"default": "7",
+			"description": "Days after a claim is sent before a reminder goes out"
+		},
+		{
+			"fieldname": "alert_email",
+			"fieldtype": "Data",
+			"label": "Alert Email",
+			"options": "Email",
+			"description": "Receives hourly sync-failure digests and Shopify customer data requests. Falls back to Administrator."
+		}
+	],
+	"in_create": 1,
+	"issingle": 1,
+	"links": [],
+	"modified": "2026-10-13 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "CODSync",
+	"name": "Store Connection",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 0,
+			"export": 0,
+			"print": 0,
+			"read": 1,
+			"report": 0,
+			"role": "System Manager",
+			"share": 0,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 0,
+			"export": 0,
+			"print": 0,
+			"read": 1,
+			"report": 0,
+			"role": "CODSync Manager",
+			"share": 0,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"track_changes": 1
 }
