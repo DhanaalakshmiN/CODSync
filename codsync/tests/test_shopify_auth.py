@@ -364,7 +364,10 @@ class TestLifecycleAndPrivacy(ShopifyCase):
 
 	def test_data_request_and_unknown_topics_change_nothing(self):
 		p = self.parcel("6", "666")
-		self.assertEqual(sa.handle_topic("customers/data_request", SHOP, {}), "data request logged")
+		with patch("frappe.sendmail") as sendmail:
+			out = sa.handle_topic("customers/data_request", SHOP, {})
+			self.assertIn("data request emailed", out)
+			sendmail.assert_called_once()
 		self.assertEqual(sa.handle_topic("orders/paid", SHOP, {}), "ignored")
 		self.assertEqual(self.pii(p)[0], "Asha")
 		self.assertEqual(frappe.get_single("Store Connection").enabled, 1)
