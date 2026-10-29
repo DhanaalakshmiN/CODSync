@@ -42,9 +42,11 @@ def get_settings(conn=None):
 	"""Currency settings from Store Connection, with defaults for empty fields."""
 	conn = conn or frappe.get_cached_doc("Store Connection")
 
-	def num(field, cast=cint):
+	def num(field, cast=cint, positive=False):
 		v = conn.get(field)
-		return cast(v) if v not in (None, "") else DEFAULTS[field]
+		if v in (None, "") or (positive and cast(v) <= 0):
+			return DEFAULTS[field]
+		return cast(v)
 
 	from codsync.codsync.platforms.base import get_creds
 
@@ -56,8 +58,8 @@ def get_settings(conn=None):
 		rate_provider_url=conn.get("rate_provider_url"),
 		fallback_provider_url=conn.get("fallback_rate_provider_url"),
 		api_key=api_key,
-		cache_seconds=num("rate_cache_seconds"),
-		timeout=num("rate_timeout_seconds"),
+		cache_seconds=num("rate_cache_seconds", positive=True),  # 0 is not a valid expiry or timeout
+		timeout=num("rate_timeout_seconds", positive=True),
 		max_age_days=num("max_rate_age_days"),
 		tolerance_amount=num("fx_tolerance_amount", flt),
 		tolerance_percent=num("fx_tolerance_percent", flt),

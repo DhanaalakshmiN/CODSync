@@ -20,7 +20,10 @@ class TestCurrency(IntegrationTestCase):
 		self.conn = frappe.get_doc("Store Connection")
 		self._saved = {
 			f: self.conn.get(f)
-			for f in ("base_currency", "rate_provider", "max_rate_age_days", "fx_tolerance_amount", "fx_tolerance_percent")
+			for f in (
+				"base_currency", "rate_provider", "max_rate_age_days", "fx_tolerance_amount", "fx_tolerance_percent",
+				"rate_cache_seconds", "rate_timeout_seconds",
+			)
 		}
 		self.set_conn(
 			base_currency="INR",
@@ -125,6 +128,15 @@ class TestCurrency(IntegrationTestCase):
 		# small order: the absolute amount wins (expected 100 -> max(1.00, 0.50))
 		self.assertEqual(payout_decision(parcel, 100, 99)[1:], (True, "Paid"))
 		self.assertEqual(payout_decision(parcel, 100, 98.99)[1:], (False, "Short-paid"))
+
+	def test_zero_cache_and_timeout_fall_back_to_defaults(self):
+		# a saved 0 is not a valid Redis expiry or HTTP timeout (it made every rate lookup fail)
+		self.set_conn(rate_cache_seconds=0, rate_timeout_seconds=0)
+		s = currency.get_settings()
+		self.assertEqual((s.cache_seconds, s.timeout), (currency.DEFAULTS["rate_cache_seconds"], currency.DEFAULTS["rate_timeout_seconds"]))
+		self.set_conn(rate_cache_seconds=600, rate_timeout_seconds=5)
+		s = currency.get_settings()
+		self.assertEqual((s.cache_seconds, s.timeout), (600, 5))
 
 	def test_same_currency_keeps_plain_tolerance(self):
 		parcel = frappe._dict(order_currency="INR")
