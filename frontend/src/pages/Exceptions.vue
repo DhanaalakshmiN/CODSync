@@ -11,7 +11,7 @@ import PageState from "../components/PageState.vue";
 import Pager from "../components/Pager.vue";
 import Tabs from "../components/Tabs.vue";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const STAGES = ["Open", "In review", "Disputed", "Resolved"];
 const tab = ref("Open");
 const search = ref("");
