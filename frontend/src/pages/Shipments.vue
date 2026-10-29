@@ -306,15 +306,17 @@ const syncAll = async () => {
 				<span class="muted">{{ detailError }}</span>
 			</div>
 			<template v-else-if="detail">
-				<dl class="kvl cols" style="padding: 16px 16px 0">
-					<div>
-						<dt>Delivery status</dt>
-						<dd>
-							<Badge :kind="deliveryKind(detail.delivery_status)">{{
-								detail.delivery_status
-							}}</Badge>
-						</dd>
-					</div>
+				<div class="tl2-meta">
+					<Badge :kind="deliveryKind(detail.delivery_status)">{{
+						detail.delivery_status
+					}}</Badge>
+					<span>{{ detail.courier || "No courier" }}</span>
+					<span>{{
+						detail.payment_mode === "Prepaid" ? "Prepaid" : rs(detail.cod_amount)
+					}}</span>
+					<span v-if="detail.delivered_date">Delivered {{ dShort(detail.delivered_date) }}</span>
+				</div>
+				<dl class="kvl cols" style="padding: 0 2px">
 					<div>
 						<dt>Charged / declared wt</dt>
 						<dd>
@@ -323,36 +325,29 @@ const syncAll = async () => {
 						</dd>
 					</div>
 					<div>
-						<dt>Delivered on</dt>
-						<dd>{{ detail.delivered_date ? dShort(detail.delivered_date) : "—" }}</dd>
-					</div>
-					<div>
-						<dt>COD amount</dt>
-						<dd>
-							{{
-								detail.payment_mode === "Prepaid"
-									? "Prepaid"
-									: rs(detail.cod_amount)
-							}}
-						</dd>
-					</div>
-					<div>
 						<dt>Payout status</dt>
 						<dd>{{ detail.payout_status || "—" }}</dd>
 					</div>
+					<div>
+						<dt>Delivered on</dt>
+						<dd>{{ detail.delivered_date ? dShort(detail.delivered_date) : "—" }}</dd>
+					</div>
 				</dl>
-				<h3 style="padding: 16px 16px 4px; font-size: 14px">Tracking events</h3>
+				<div class="tl2-head">
+					<strong>Tracking timeline</strong>
+					<span class="muted" style="font-size: 12px">{{ events.length }} event(s)</span>
+				</div>
 				<EmptyState
 					v-if="!events.length"
 					title="No tracking events yet"
 					text="Run Sync Tracking to pull the latest scans from the courier."
 				/>
-				<ul v-else class="tl">
-					<li v-for="(e, i) in events" :key="i">
-						<span :class="['m', dot(e.status)]"></span>
-						<div>
+				<ul v-else class="tl2">
+					<li v-for="(e, i) in events" :key="i" :class="{ cur: i === 0 }">
+						<span :class="['m2', dot(e.status)]"></span>
+						<div class="tx">
 							<strong>{{ e.status || "Event" }}</strong>
-							<div v-if="e.location" class="muted">{{ e.location }}</div>
+							<div v-if="e.location" class="loc">{{ e.location }}</div>
 						</div>
 						<span class="w">{{ e.event_time ? dShortTime(e.event_time) : "—" }}</span>
 					</li>
