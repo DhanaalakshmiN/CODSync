@@ -13,7 +13,7 @@ import PageState from "../components/PageState.vue";
 import Pager from "../components/Pager.vue";
 import Tabs from "../components/Tabs.vue";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const status = ref("All");
 const search = ref("");
 const courier = ref("");

@@ -13,7 +13,7 @@ import Pager from "../components/Pager.vue";
 import ImportParcelsDialog from "../components/ImportParcelsDialog.vue";
 import Tabs from "../components/Tabs.vue";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const tab = ref("COD");
 const search = ref("");
 const page = ref(1);

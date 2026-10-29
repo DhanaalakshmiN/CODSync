@@ -12,7 +12,7 @@ import PageState from "../components/PageState.vue";
 import Pager from "../components/Pager.vue";
 import Tabs from "../components/Tabs.vue";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const tab = ref("All batches");
 const search = ref("");
 const courier = ref("");
