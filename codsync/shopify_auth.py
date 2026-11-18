@@ -154,8 +154,11 @@ def authenticate():
 	email = ensure_shop_user(shop)
 	# frappe.set_user() resets the request parameters; without this every API call loses its arguments
 	form_dict = frappe.local.form_dict
-	frappe.set_user(email)
-	frappe.local.form_dict = form_dict
+	try:
+		# Authentication establishes the user for the rest of this request; do not restore Guest.
+		frappe.set_user(email)  # nosemgrep: intentional request authentication, not temporary impersonation
+	finally:
+		frappe.local.form_dict = form_dict
 
 
 # --------------------------------------------------------------------------- connect

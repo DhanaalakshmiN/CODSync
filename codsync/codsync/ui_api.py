@@ -2054,6 +2054,7 @@ def test_connection():
 
 
 def _fetch_orders_job(user):
+	previous_user = frappe.session.user
 	try:
 		# background job: run as the user who started the fetch
 		frappe.set_user(user)  # nosemgrep
@@ -2061,9 +2062,12 @@ def _fetch_orders_job(user):
 	except Exception:
 		pass  # the platform adapter already wrote the failure to Sync Log
 	finally:
-		frappe.cache().delete_value(FETCH_FLAG)
-		# background job: nothing else commits the sync log rows
-		frappe.db.commit()  # nosemgrep
+		try:
+			frappe.cache().delete_value(FETCH_FLAG)
+			# background job: nothing else commits the sync log rows
+			frappe.db.commit()  # nosemgrep
+		finally:
+			frappe.set_user(previous_user)
 
 
 @frappe.whitelist(methods=["POST"])
