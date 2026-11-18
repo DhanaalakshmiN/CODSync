@@ -326,6 +326,20 @@ def reconcile_remittance(remittance_name):
 	"""
 	remittance = frappe.get_doc("Courier Remittance", remittance_name)
 	parcel_map = _awb_parcels()
+	# Load only unambiguous candidates, once, while retaining full Documents.
+	parcel_names = {
+		names[0]
+		for line in remittance.lines
+		if len(names := parcel_map.get(normalize_awb(line.awb), [])) == 1
+	}
+	parcels = (
+		{
+			parcel.name: parcel
+			for parcel in frappe.get_docs("COD Parcel", filters={"name": ["in", list(parcel_names)]})
+		}
+		if parcel_names
+		else {}
+	)
 	batch_ref = remittance.file_name or remittance.name
 	seen = {}
 	counts = {"matched": 0, "short-paid": 0, "unknown": 0, "exceptions": 0}
@@ -368,7 +382,7 @@ def reconcile_remittance(remittance_name):
 				)
 				exc_type = "Duplicate AWB"
 			else:
-				parcel = frappe.get_doc("COD Parcel", names[0])
+				parcel = parcels[names[0]]
 				if (parcel.payment_mode or "COD") == "Prepaid":
 					outcome, reason = "ambiguous", f"Parcel {parcel.name} is Prepaid, not a COD order"
 				elif (
@@ -948,21 +962,29 @@ def recalculate_currency_amounts():
 	from codsync.codsync.currency import get_base_currency
 
 	base = get_base_currency()
-	names = frappe.get_all(
+	parcels = frappe.get_docs(
 		"COD Parcel",
 		filters={
 			"order_currency": ["not in", ["", base]],
 			"payout_status": ["in", ["Paid", "Short-paid"]],
 		},
-		pluck="name",
+		order_by="modified desc",
 	)
+	# Keep the most recently modified line per parcel, as the previous lookup did.
+	latest_lines = {}
+	if parcels:
+		for line in frappe.get_docs(
+			"Remittance Line",
+			filters={"cod_parcel": ["in", [parcel.name for parcel in parcels]]},
+			order_by="modified desc",
+		):
+			latest_lines.setdefault(line.cod_parcel, line)
 	counts = {"checked": 0, "changed": 0, "now_paid": 0, "now_short_paid": 0}
-	for name in names:
-		parcel = frappe.get_doc("COD Parcel", name)
-		line_name = frappe.db.get_value("Remittance Line", {"cod_parcel": name}, "name", order_by="modified desc")
-		line = frappe.get_doc("Remittance Line", line_name) if line_name else None
+	for parcel in parcels:
+		name = parcel.name
+		line = latest_lines.get(name)
 		expected = expected_for(parcel, line)["expected_settlement"]
-		difference, within, status = payout_decision(parcel, expected, parcel.actual_settlement)
+		difference, _within, status = payout_decision(parcel, expected, parcel.actual_settlement)
 		counts["checked"] += 1
 		if (flt(parcel.expected_settlement), flt(parcel.difference), parcel.payout_status) == (
 			flt(expected, get_currency_precision()),

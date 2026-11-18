@@ -42,7 +42,7 @@ class MockAdapter(BaseAdapter):
 		"""Batch: delivered parcels of this courier that have no settlement yet."""
 		from codsync.codsync.engine import expected_for
 
-		parcels = frappe.get_all(
+		parcels = frappe.get_docs(
 			"COD Parcel",
 			filters={
 				"courier": courier,
@@ -51,11 +51,10 @@ class MockAdapter(BaseAdapter):
 				"settlement_batch": ["is", "not set"],
 				"payment_mode": "COD",
 			},
-			pluck="name",
+			order_by="modified desc",
 		)
 		lines = []
-		for name in parcels:
-			parcel = frappe.get_doc("COD Parcel", name)
+		for parcel in parcels:
 			exp = expected_for(parcel)
 			lines.append(
 				{
