@@ -182,7 +182,28 @@ class ShopifyPlatform(BasePlatform):
 		try:
 			while url:
 				resp = self._get(conn, url)
-				for order in resp.json().get("orders") or []:
+				orders = resp.json().get("orders") or []
+
+				# Batch-fetch existing parcels once per page
+				external_ids = [
+					str(order["id"])
+					for order in orders
+					if order.get("id") is not None
+				]
+
+				existing_parcels = {}
+				if external_ids:
+					existing_parcels = {
+						row.external_id: row.name
+						for row in frappe.get_all(
+							"COD Parcel",
+							filters={"external_id": ["in", external_ids]},
+							fields=["name", "external_id"],
+							limit_page_length=0,
+						)
+					}
+
+				for order in orders:
 					counts["fetched"] += 1
 					try:
 						values = self.parse_order(order, conn)
@@ -190,34 +211,62 @@ class ShopifyPlatform(BasePlatform):
 							counts["skipped"] += 1
 							continue
 						counts["cod"] += 1
-						existing = frappe.db.get_value("COD Parcel", {"external_id": values["external_id"]})
+
+						# Dictionary lookup instead of DB query
+						existing = existing_parcels.get(
+							values["external_id"]
+						)
+
 						if existing:
 							values["order_id"] = existing
 						_upsert_order(values, conn)
 						counts["updated" if existing else "created"] += 1
+						# Keep cache updated for duplicate IDs
+						if not existing:
+							created = frappe.db.get_value(
+								"COD Parcel",
+								{"external_id": values["external_id"]},
+							)
+							if created:
+								existing_parcels[values["external_id"]] = created
+
 					except Exception as e:
 						counts["failed"] += 1
-						frappe.log_error(frappe.get_traceback(), "CODSync fetch_orders")
-						# keys only, never order data, so the cause is visible without leaking PII
+						frappe.log_error(
+							frappe.get_traceback(), "CODSync fetch_orders"
+						)
 						log_sync(
 							"Shopify",
 							"Order Sync",
 							"Failed",
 							error_message="Order {}: {}".format(
-								order.get("name") or order.get("order_number") or order.get("id") or "?", e
+								order.get("name")
+								or order.get("order_number")
+								or order.get("id")
+								or "?",
+								e,
 							),
 							response_payload={"payload_keys": sorted(order)},
 						)
 				url = resp.links.get("next", {}).get("url")
 		except Exception as e:
 			error = str(e)
-			status = getattr(getattr(e, "response", None), "status_code", None)
-		frappe.db.set_single_value("Store Connection", "last_synced_on", now_datetime())
+			status = getattr(
+				getattr(e, "response", None), "status_code", None
+			)
+
+		frappe.db.set_single_value(
+			"Store Connection", "last_synced_on", now_datetime()
+		)
+
 		log_sync(
 			"Shopify",
 			"Order Sync",
 			"Failed" if error or counts["failed"] else "Success",
-			error_message=error or (f"{counts['failed']} orders failed" if counts["failed"] else None),
+			error_message=error or (
+				f"{counts['failed']} orders failed"
+				if counts["failed"] else None
+			),
 			http_status=status,
 			endpoint=endpoint,
 			duration_ms=int((time.time() - started) * 1000),

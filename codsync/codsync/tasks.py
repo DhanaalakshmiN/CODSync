@@ -49,6 +49,7 @@ def run_daily_order_sync():
 	conn = frappe.get_doc("Store Connection")
 	if not conn.enabled:
 		return
+	previous_user = frappe.session.user
 	try:
 		frappe.set_user("Administrator")  # nosemgrep: scheduled job, not a web request
 		conn.fetch_orders()
@@ -57,7 +58,10 @@ def run_daily_order_sync():
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "CODSync scheduled order sync")
 	finally:
-		frappe.db.commit()  # nosemgrep: scheduled job must persist its Sync Log rows
+		try:
+			frappe.db.commit()  # nosemgrep: scheduled job must persist its Sync Log rows
+		finally:
+			frappe.set_user(previous_user)
 
 
 def run_daily_mark_missing():

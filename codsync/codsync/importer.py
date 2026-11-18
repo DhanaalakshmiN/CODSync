@@ -505,10 +505,10 @@ def preview_import(
 	couriers = {}
 	invalid, valid, create, update = [], 0, 0, 0
 	duplicates, seen_batches = [], {}
-	existing = set(frappe.get_all("COD Parcel", pluck="name")) if import_type == "Parcels" else set()
+	existing = set(frappe.get_list("COD Parcel", pluck="name")) if import_type == "Parcels" else set()
 	detail, seen_awbs, parcel_idx = [], set(), {}
 	if import_type == "Remittance":
-		for r in frappe.get_all(
+		for r in frappe.get_list(
 			"COD Parcel",
 			filters={"awb": ["is", "set"]},
 			fields=["name", "awb", "settlement_batch", "payment_mode"],

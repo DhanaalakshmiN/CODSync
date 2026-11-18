@@ -246,7 +246,7 @@ def couriers(active_only: int = 0):
 		)
 	)
 	out = []
-	for c in frappe.get_all(
+	for c in frappe.get_list(
 		"Courier",
 		fields=["*"],
 		filters={"is_active": 1} if cint(active_only) else {},
@@ -420,7 +420,7 @@ def boot():
 	_read()
 	conn = frappe.get_cached_doc("Store Connection")
 	stamps = [conn.last_synced_on]
-	for c in frappe.get_all("Courier", fields=["last_tracking_sync", "last_settlement_sync"]):
+	for c in frappe.get_list("Courier", fields=["last_tracking_sync", "last_settlement_sync"]):
 		stamps += [c.last_tracking_sync, c.last_settlement_sync]
 	stamps = [get_datetime(s) for s in stamps if s]
 	return {
@@ -538,7 +538,7 @@ def overview(period: str = "30d", courier: str | None = None):
 		"total_open": len(exceptions),
 	}
 
-	batches = frappe.get_all(
+	batches = frappe.get_list(
 		"Courier Remittance",
 		filters={"docstatus": 1, **({"courier": courier} if courier else {})},
 		fields=[
@@ -576,7 +576,7 @@ def overview(period: str = "30d", courier: str | None = None):
 			"time": _dt(c.last_settlement_sync),
 			"settlement_via": c.settlement_via,
 		}
-		for c in frappe.get_all(
+		for c in frappe.get_list(
 			"Courier",
 			filters={"connection_status": "Action needed"},
 			fields=["name", "last_error", "last_settlement_sync", "settlement_via"],
@@ -764,7 +764,7 @@ def order_detail(order_id: str):
 	doc = frappe.get_doc("COD Parcel", order_id)
 	p = next(iter(_orders_for([doc.name])), None)
 	line = _line_for(doc.name)
-	exc_open = frappe.get_all(
+	exc_open = frappe.get_list(
 		"COD Exception", filters={"cod_parcel": doc.name, "status": "Open"}, fields=["name", "exception_type"]
 	)
 	batch = line
@@ -925,7 +925,7 @@ def raise_dispute(order_id: str):
 def resolve_order(order_id: str, note: str | None = None):
 	"""Close the order's open exceptions as Resolved manually. Write role."""
 	_write()
-	names = frappe.get_all("COD Exception", filters={"cod_parcel": order_id, "status": "Open"}, pluck="name")
+	names = frappe.get_list("COD Exception", filters={"cod_parcel": order_id, "status": "Open"}, pluck="name")
 	if not names:
 		frappe.throw(_("This order has no open exceptions"))
 	for n in names:
@@ -989,7 +989,7 @@ def shipments(
 	result = _paginate(out, page, page_size, sort, search, ("awb", "order_id", "courier"))
 	stamps = [
 		c.last_tracking_sync
-		for c in frappe.get_all("Courier", fields=["last_tracking_sync"])
+		for c in frappe.get_list("Courier", fields=["last_tracking_sync"])
 		if c.last_tracking_sync
 	]
 	result["counts"] = counts
@@ -1032,7 +1032,7 @@ def sync_tracking():
 	_write()
 	from codsync.codsync.tracking import sync_tracking as sync_courier
 
-	couriers = frappe.get_all(
+	couriers = frappe.get_list(
 		"COD Parcel",
 		pluck="courier",
 		distinct=True,
@@ -1066,7 +1066,7 @@ def remittance_batches():
 			"orders": cint(b.orders_count),
 			"status": b.batch_status,
 		}
-		for b in frappe.get_all(
+		for b in frappe.get_list(
 			"Courier Remittance",
 			filters={"docstatus": 1},
 			fields=["name", "courier", "remittance_date", "orders_count", "batch_status"],
@@ -1182,7 +1182,7 @@ def settlements(
 ):
 	"""Courier Remittance batches list."""
 	_read()
-	batches = frappe.get_all(
+	batches = frappe.get_list(
 		"Courier Remittance",
 		filters={"docstatus": 1},
 		limit_page_length=0,
@@ -1471,7 +1471,7 @@ def exceptions(filters: dict | str | None = None, page: int = 1, page_size: int 
 	f = _json(filters, {}) or {}
 	rows = [
 		_exc_list_row(e)
-		for e in frappe.get_all(
+		for e in frappe.get_list(
 			"COD Exception", fields=EXC_FIELDS, order_by="creation desc", limit_page_length=0
 		)
 	]
@@ -1650,7 +1650,7 @@ def exception_detail(name: str):
 	exc = frappe.get_doc("COD Exception", name)
 	parcel = frappe.get_doc("COD Parcel", exc.cod_parcel) if exc.cod_parcel else None
 	cand = _exc_candidates(exc)
-	users = frappe.get_all(
+	users = frappe.get_list(
 		"User",
 		filters={"enabled": 1, "user_type": "System User", "name": ["!=", "Guest"]},
 		fields=["name", "full_name"],
@@ -1862,14 +1862,18 @@ def _match(exc, p):
 		frappe.throw(_("Matching is not available for {0}").format(exc.exception_type))
 	if exc.cod_parcel:
 		line = p.get("line")
-		parcel = frappe.get_doc("COD Parcel", exc.cod_parcel)
+		parcel = frappe.db.get_value("COD Parcel", exc.cod_parcel, ["name", "awb"], as_dict=True)
+		if not parcel:
+			frappe.throw(_("COD Parcel {0} not found").format(exc.cod_parcel), frappe.DoesNotExistError)
 		if not line:
 			frappe.throw(_("Choose the settlement line to match"))
 	else:
 		parcel_name = p.get("parcel")
 		if not parcel_name:
 			frappe.throw(_("Choose the order to match"))
-		parcel = frappe.get_doc("COD Parcel", parcel_name)
+		parcel = frappe.db.get_value("COD Parcel", parcel_name, ["name", "awb"], as_dict=True)
+		if not parcel:
+			frappe.throw(_("COD Parcel {0} not found").format(parcel_name), frappe.DoesNotExistError)
 		line = (
 			frappe.db.get_value(
 				"Remittance Line",
@@ -1972,7 +1976,7 @@ def settings():
 		"courier_mapping": [
 			{"source_name": r.source_name, "courier": r.courier} for r in doc.courier_mapping or []
 		],
-		"couriers": frappe.get_all("Courier", pluck="name", order_by="courier_name asc", limit_page_length=0),
+		"couriers": frappe.get_list("Courier", pluck="name", order_by="courier_name asc", limit_page_length=0),
 		"platforms": list(PLATFORMS),
 		"status": {
 			"last_test_status": doc.last_test_status,
@@ -2050,6 +2054,7 @@ def test_connection():
 
 
 def _fetch_orders_job(user):
+	previous_user = frappe.session.user
 	try:
 		# background job: run as the user who started the fetch
 		frappe.set_user(user)  # nosemgrep
@@ -2057,9 +2062,12 @@ def _fetch_orders_job(user):
 	except Exception:
 		pass  # the platform adapter already wrote the failure to Sync Log
 	finally:
-		frappe.cache().delete_value(FETCH_FLAG)
-		# background job: nothing else commits the sync log rows
-		frappe.db.commit()  # nosemgrep
+		try:
+			frappe.cache().delete_value(FETCH_FLAG)
+			# background job: nothing else commits the sync log rows
+			frappe.db.commit()  # nosemgrep
+		finally:
+			frappe.set_user(previous_user)
 
 
 @frappe.whitelist(methods=["POST"])
@@ -2087,7 +2095,7 @@ def sync_log(page: int = 1, page_size: int = 10, status: str | None = None, oper
 		filters["operation"] = operation
 	total = frappe.db.count("Sync Log", filters)
 	page, page_size = max(cint(page) or 1, 1), min(max(cint(page_size) or 10, 1), 100)
-	rows = frappe.get_all(
+	rows = frappe.get_list(
 		"Sync Log",
 		filters=filters,
 		order_by="creation desc",
@@ -2123,7 +2131,7 @@ def sync_log(page: int = 1, page_size: int = 10, status: str | None = None, oper
 			for r in rows
 		],
 		"total": total,
-		"operations": frappe.get_all("Sync Log", pluck="operation", distinct=True, order_by="operation asc"),
+		"operations": frappe.get_list("Sync Log", pluck="operation", distinct=True, order_by="operation asc"),
 	}
 
 

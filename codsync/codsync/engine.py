@@ -326,6 +326,20 @@ def reconcile_remittance(remittance_name):
 	"""
 	remittance = frappe.get_doc("Courier Remittance", remittance_name)
 	parcel_map = _awb_parcels()
+	# Load only unambiguous candidates, once, while retaining full Documents.
+	parcel_names = {
+		names[0]
+		for line in remittance.lines
+		if len(names := parcel_map.get(normalize_awb(line.awb), [])) == 1
+	}
+	parcels = (
+		{
+			parcel.name: parcel
+			for parcel in frappe.get_docs("COD Parcel", filters={"name": ["in", list(parcel_names)]})
+		}
+		if parcel_names
+		else {}
+	)
 	batch_ref = remittance.file_name or remittance.name
 	seen = {}
 	counts = {"matched": 0, "short-paid": 0, "unknown": 0, "exceptions": 0}
@@ -368,7 +382,7 @@ def reconcile_remittance(remittance_name):
 				)
 				exc_type = "Duplicate AWB"
 			else:
-				parcel = frappe.get_doc("COD Parcel", names[0])
+				parcel = parcels[names[0]]
 				if (parcel.payment_mode or "COD") == "Prepaid":
 					outcome, reason = "ambiguous", f"Parcel {parcel.name} is Prepaid, not a COD order"
 				elif (
@@ -499,7 +513,24 @@ def reconcile_remittance(remittance_name):
 def raise_dispute(parcel: str):
 	"""Open (or reuse) the parcel's COD Exception and mark the dispute as raised. Write role."""
 	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator"))
-	doc = frappe.get_doc("COD Parcel", parcel)
+	doc = frappe.db.get_value(
+		"COD Parcel",
+		parcel,
+		[
+			"name",
+			"cod_amount",
+			"payout_status",
+			"difference",
+			"awb",
+			"courier",
+			"settlement_batch",
+			"expected_settlement",
+			"actual_settlement",
+		],
+		as_dict=True,
+	)
+	if not doc:
+		frappe.throw(_("COD Parcel {0} not found").format(parcel), frappe.DoesNotExistError)
 	name = frappe.db.get_value("COD Exception", {"cod_parcel": doc.name, "status": "Open"})
 	if name:
 		exc = frappe.get_doc("COD Exception", name)
@@ -528,6 +559,7 @@ def raise_dispute(parcel: str):
 @frappe.whitelist()
 def add_note(order_id: str, text: str):
 	"""Add a note (Comment) to the parcel named by this order id."""
+	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator"))
 	doc = frappe.get_doc("COD Parcel", order_id)
 	doc.add_comment("Comment", text)
 	return True
@@ -589,7 +621,7 @@ def timeline(parcel: str):
 			)
 		)
 
-	for e in frappe.get_all(
+	for e in frappe.get_list(
 		"COD Exception",
 		filters={"cod_parcel": doc.name},
 		fields=[
@@ -625,7 +657,7 @@ def timeline(parcel: str):
 				)
 			)
 
-	for c in frappe.get_all(
+	for c in frappe.get_list(
 		"Comment",
 		filters={"reference_doctype": "COD Parcel", "reference_name": doc.name, "comment_type": "Comment"},
 		fields=["content", "creation", "name"],
@@ -707,8 +739,9 @@ def reconciliation_status(p, open_exception_types=()):
 @frappe.whitelist()
 def statuses(parcel: str):
 	"""delivery / COD / reconciliation status of one parcel."""
+	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator", "CODSync Viewer"))
 	doc = frappe.get_doc("COD Parcel", parcel).as_dict()
-	open_types = frappe.get_all(
+	open_types = frappe.get_list(
 		"COD Exception", pluck="exception_type", filters={"cod_parcel": parcel, "status": "Open"}
 	)
 	return {
@@ -948,21 +981,29 @@ def recalculate_currency_amounts():
 	from codsync.codsync.currency import get_base_currency
 
 	base = get_base_currency()
-	names = frappe.get_all(
+	parcels = frappe.get_docs(
 		"COD Parcel",
 		filters={
 			"order_currency": ["not in", ["", base]],
 			"payout_status": ["in", ["Paid", "Short-paid"]],
 		},
-		pluck="name",
+		order_by="modified desc",
 	)
+	# Keep the most recently modified line per parcel, as the previous lookup did.
+	latest_lines = {}
+	if parcels:
+		for line in frappe.get_docs(
+			"Remittance Line",
+			filters={"cod_parcel": ["in", [parcel.name for parcel in parcels]]},
+			order_by="modified desc",
+		):
+			latest_lines.setdefault(line.cod_parcel, line)
 	counts = {"checked": 0, "changed": 0, "now_paid": 0, "now_short_paid": 0}
-	for name in names:
-		parcel = frappe.get_doc("COD Parcel", name)
-		line_name = frappe.db.get_value("Remittance Line", {"cod_parcel": name}, "name", order_by="modified desc")
-		line = frappe.get_doc("Remittance Line", line_name) if line_name else None
+	for parcel in parcels:
+		name = parcel.name
+		line = latest_lines.get(name)
 		expected = expected_for(parcel, line)["expected_settlement"]
-		difference, within, status = payout_decision(parcel, expected, parcel.actual_settlement)
+		difference, _within, status = payout_decision(parcel, expected, parcel.actual_settlement)
 		counts["checked"] += 1
 		if (flt(parcel.expected_settlement), flt(parcel.difference), parcel.payout_status) == (
 			flt(expected, get_currency_precision()),
