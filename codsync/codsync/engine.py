@@ -559,6 +559,7 @@ def raise_dispute(parcel: str):
 @frappe.whitelist()
 def add_note(order_id: str, text: str):
 	"""Add a note (Comment) to the parcel named by this order id."""
+	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator"))
 	doc = frappe.get_doc("COD Parcel", order_id)
 	doc.add_comment("Comment", text)
 	return True
@@ -620,7 +621,7 @@ def timeline(parcel: str):
 			)
 		)
 
-	for e in frappe.get_all(
+	for e in frappe.get_list(
 		"COD Exception",
 		filters={"cod_parcel": doc.name},
 		fields=[
@@ -656,7 +657,7 @@ def timeline(parcel: str):
 				)
 			)
 
-	for c in frappe.get_all(
+	for c in frappe.get_list(
 		"Comment",
 		filters={"reference_doctype": "COD Parcel", "reference_name": doc.name, "comment_type": "Comment"},
 		fields=["content", "creation", "name"],
@@ -738,8 +739,9 @@ def reconciliation_status(p, open_exception_types=()):
 @frappe.whitelist()
 def statuses(parcel: str):
 	"""delivery / COD / reconciliation status of one parcel."""
+	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator", "CODSync Viewer"))
 	doc = frappe.get_doc("COD Parcel", parcel).as_dict()
-	open_types = frappe.get_all(
+	open_types = frappe.get_list(
 		"COD Exception", pluck="exception_type", filters={"cod_parcel": parcel, "status": "Open"}
 	)
 	return {

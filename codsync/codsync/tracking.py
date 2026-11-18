@@ -177,6 +177,7 @@ def update_parcel_tracking(parcel: str):
 
 	Updates parcel status and delivered_date. Never touches payout_status.
 	"""
+	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator"))
 	doc = frappe.get_doc("COD Parcel", parcel)
 	if not doc.awb:
 		return
