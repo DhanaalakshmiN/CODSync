@@ -513,7 +513,24 @@ def reconcile_remittance(remittance_name):
 def raise_dispute(parcel: str):
 	"""Open (or reuse) the parcel's COD Exception and mark the dispute as raised. Write role."""
 	frappe.only_for(("System Manager", "CODSync Manager", "CODSync Operator"))
-	doc = frappe.get_doc("COD Parcel", parcel)
+	doc = frappe.db.get_value(
+		"COD Parcel",
+		parcel,
+		[
+			"name",
+			"cod_amount",
+			"payout_status",
+			"difference",
+			"awb",
+			"courier",
+			"settlement_batch",
+			"expected_settlement",
+			"actual_settlement",
+		],
+		as_dict=True,
+	)
+	if not doc:
+		frappe.throw(_("COD Parcel {0} not found").format(parcel), frappe.DoesNotExistError)
 	name = frappe.db.get_value("COD Exception", {"cod_parcel": doc.name, "status": "Open"})
 	if name:
 		exc = frappe.get_doc("COD Exception", name)

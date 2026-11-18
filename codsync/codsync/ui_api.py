@@ -1862,14 +1862,18 @@ def _match(exc, p):
 		frappe.throw(_("Matching is not available for {0}").format(exc.exception_type))
 	if exc.cod_parcel:
 		line = p.get("line")
-		parcel = frappe.get_doc("COD Parcel", exc.cod_parcel)
+		parcel = frappe.db.get_value("COD Parcel", exc.cod_parcel, ["name", "awb"], as_dict=True)
+		if not parcel:
+			frappe.throw(_("COD Parcel {0} not found").format(exc.cod_parcel), frappe.DoesNotExistError)
 		if not line:
 			frappe.throw(_("Choose the settlement line to match"))
 	else:
 		parcel_name = p.get("parcel")
 		if not parcel_name:
 			frappe.throw(_("Choose the order to match"))
-		parcel = frappe.get_doc("COD Parcel", parcel_name)
+		parcel = frappe.db.get_value("COD Parcel", parcel_name, ["name", "awb"], as_dict=True)
+		if not parcel:
+			frappe.throw(_("COD Parcel {0} not found").format(parcel_name), frappe.DoesNotExistError)
 		line = (
 			frappe.db.get_value(
 				"Remittance Line",
