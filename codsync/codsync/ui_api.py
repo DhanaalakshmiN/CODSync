@@ -18,7 +18,6 @@ from frappe.utils import (
 	flt,
 	get_datetime,
 	getdate,
-	now_datetime,
 	nowdate,
 	pretty_date,
 )

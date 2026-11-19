@@ -4,7 +4,7 @@ import re
 
 import frappe
 from frappe import _
-from frappe.utils import add_to_date, cint, flt, get_datetime, today
+from frappe.utils import add_to_date, flt, get_datetime
 
 from codsync.codsync import disputes
 from codsync.codsync.currency import get_currency_precision

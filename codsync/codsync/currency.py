@@ -18,7 +18,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate, today
 
-from codsync.codsync.rate_providers import PROVIDERS, get_provider, provider_chain
+from codsync.codsync.rate_providers import get_provider, provider_chain
 
 # Used only when the Store Connection fields are still empty (before first save).
 DEFAULTS = {
@@ -151,11 +151,6 @@ def convert_to_base(amount, from_currency, on_date=None, base_currency=None):
 	rate, source = get_rate_with_source(from_currency, on_date, base_currency, s)
 	return flt(flt(amount) * rate, get_currency_precision()), rate, source
 
-
-def convert_to_inr(amount, from_currency, on_date=None, base_currency=None):
-	"""Backward-compatible (amount, rate); the target is the base currency."""
-	total, rate, _source = convert_to_base(amount, from_currency, on_date, base_currency)
-	return total, rate
 
 
 # --------------------------------------------------------------------------- helpers

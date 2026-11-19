@@ -2,7 +2,7 @@ import datetime
 
 import frappe
 from frappe import _
-from frappe.utils import add_to_date, get_datetime, now_datetime
+from frappe.utils import add_to_date, now_datetime
 
 
 class NotSupported(Exception):
