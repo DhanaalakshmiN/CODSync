@@ -152,7 +152,6 @@ def convert_to_base(amount, from_currency, on_date=None, base_currency=None):
 	return flt(flt(amount) * rate, get_currency_precision()), rate, source
 
 
-
 # --------------------------------------------------------------------------- helpers
 
 
@@ -187,7 +186,9 @@ def _save_rate(from_currency, to_currency, on_date, rate):
 				"rate": rate,
 				"source": "API",
 			}
-		).insert(ignore_permissions=True)
+		).insert(
+			ignore_permissions=True
+		)  # nosemgrep: internal cache of provider rates, not user-supplied writes
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "CODSync save Currency Rate")
 

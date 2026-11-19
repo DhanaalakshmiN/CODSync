@@ -105,7 +105,7 @@ def upsert_exception(exception_type, cod_parcel=None, awb=None, **fields):
 				**fields,
 			}
 		)
-	exc.save(ignore_permissions=True) if name else exc.insert(ignore_permissions=True)
+	exc.save() if name else exc.insert()
 	return exc
 
 
@@ -150,7 +150,7 @@ def normalize_awb(value):
 			f = float(s)
 			if f == int(f):
 				return str(int(f))
-		except (ValueError, OverflowError):
+		except ValueError, OverflowError:
 			pass
 	return s
 
@@ -552,7 +552,7 @@ def raise_dispute(parcel: str):
 			}
 		)
 	exc.resolution = "Raise dispute"
-	exc.save(ignore_permissions=True)
+	exc.save()
 	return exc.name
 
 
@@ -840,10 +840,12 @@ def run_reconciliation(courier=None):
 	_sync_exception(
 		"Missing AWB",
 		parcels,
-		lambda p: p.order_status == "Fulfilled"
-		and not p.awb
-		and p.status != "Cancelled"
-		and get_datetime(p.order_date or p.creation) < cutoff,
+		lambda p: (
+			p.order_status == "Fulfilled"
+			and not p.awb
+			and p.status != "Cancelled"
+			and get_datetime(p.order_date or p.creation) < cutoff
+		),
 		lambda p: {"detail": "Fulfilled on the store for over 24h but no AWB"},
 		"AWB added",
 		counts,
@@ -915,7 +917,7 @@ def sync_settlements(courier):
 				"lines": batch["lines"],
 			}
 		)
-		doc.insert(ignore_permissions=True)
+		doc.insert()
 		doc.submit()
 		frappe.db.set_value(
 			"Courier",
@@ -963,15 +965,19 @@ def sync_settlements(courier):
 
 def run_hourly_settlement_sync():
 	"""Hourly job: run each enabled courier's settlement sync once per day after its sync time."""
-	now = frappe.utils.now_datetime()
-	for c in frappe.get_all(
-		"Courier",
-		filters={"is_active": 1, "settlement_sync_enabled": 1},
-		fields=["name", "settlement_sync_time", "last_settlement_sync"],
-	):
-		due_at = frappe.utils.get_datetime(f"{now.date()} {c.settlement_sync_time or '09:00:00'}")
-		if now >= due_at and not (c.last_settlement_sync and c.last_settlement_sync >= due_at):
-			sync_settlements(c.name)
+	try:
+		now = frappe.utils.now_datetime()
+		for c in frappe.get_all(
+			"Courier",
+			filters={"is_active": 1, "settlement_sync_enabled": 1},
+			fields=["name", "settlement_sync_time", "last_settlement_sync"],
+		):
+			due_at = frappe.utils.get_datetime(f"{now.date()} {c.settlement_sync_time or '09:00:00'}")
+			if now >= due_at and not (c.last_settlement_sync and c.last_settlement_sync >= due_at):
+				sync_settlements(c.name)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "CODSync hourly settlement sync")
+		raise
 
 
 def recalculate_currency_amounts():

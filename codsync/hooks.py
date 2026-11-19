@@ -166,7 +166,7 @@ default_log_clearing_doctypes = {"Sync Log": 90}
 
 scheduler_events = {
 	"hourly": [
-		"codsync.codsync.tasks.run_hourly_tracking",
+		"codsync.codsync.tracking.run_hourly_tracking",
 		"codsync.codsync.engine.run_hourly_settlement_sync",
 		"codsync.codsync.tasks.run_hourly_failure_alert",
 	],

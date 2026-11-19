@@ -830,12 +830,16 @@ def import_remittance(file_url: str, courier: str, mapping_template: str | dict 
 
 def _run_background(import_type, file_url, courier, mapping_template, user):
 	"""Worker for large files: run the import, then tell the user's browser."""
-	if import_type == "Parcels":
-		result = import_parcels(file_url, courier, mapping_template)
-	else:
-		result = import_remittance(file_url, courier, mapping_template)
-	# background job: nothing else commits the import
-	frappe.db.commit()  # nosemgrep
+	try:
+		if import_type == "Parcels":
+			result = import_parcels(file_url, courier, mapping_template)
+		else:
+			result = import_remittance(file_url, courier, mapping_template)
+		# background job: nothing else commits the import
+		frappe.db.commit()  # nosemgrep
+	except Exception:
+		frappe.db.rollback()
+		raise
 	frappe.publish_realtime("codsync_import_done", result, user=user)
 
 

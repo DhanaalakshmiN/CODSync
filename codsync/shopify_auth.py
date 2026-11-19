@@ -58,8 +58,14 @@ def _log_rejection(token, client_id, error):
 		claims = {}
 	frappe.logger("codsync_shopify", allow_site=False, file_count=3).warning(
 		"session token rejected: %s: %s | token aud=%s (site client id=%s) dest=%s iss=%s exp=%s now=%s",
-		type(error).__name__, error, claims.get("aud"), client_id, claims.get("dest"), claims.get("iss"),
-		claims.get("exp"), int(time.time()),
+		type(error).__name__,
+		error,
+		claims.get("aud"),
+		client_id,
+		claims.get("dest"),
+		claims.get("iss"),
+		claims.get("exp"),
+		int(time.time()),
 	)
 
 
@@ -113,13 +119,15 @@ def shop_user(shop):
 
 
 def ensure_shop_user(shop):
-	"""Create (or re-enable) the shop's own user with the CODSync Manager role. Returns the email."""
+	"""Provision the shop user after JWT verification and the single-store check; never whitelisted."""
 	email = shop_user(shop)
 	if frappe.db.exists("User", email):
 		user = frappe.get_doc("User", email)
 		if not user.enabled:
 			user.enabled = 1
-			user.save(ignore_permissions=True)
+			user.save(
+				ignore_permissions=True
+			)  # nosemgrep: shop identity verified before authentication provisioning
 		return email
 	frappe.get_doc(
 		{
@@ -131,7 +139,7 @@ def ensure_shop_user(shop):
 			"send_welcome_email": 0,
 			"roles": [{"role": SHOP_ROLE}],
 		}
-	).insert(ignore_permissions=True)
+	).insert(ignore_permissions=True)  # nosemgrep: verified Shopify identity needs a user before login
 	return email
 
 
@@ -231,7 +239,9 @@ def _base_url():
 	return f"https://{host}"
 
 
-@frappe.whitelist(allow_guest=True, methods=["POST"])  # nosemgrep: public by design, verified by session token
+@frappe.whitelist(
+	allow_guest=True, methods=["POST"]
+)  # nosemgrep: public by design, verified by session token
 def connect():
 	"""First open of the embedded app: connect this shop. Safe to call on every open."""
 	token = _request_token()
@@ -249,30 +259,32 @@ def connect():
 	if not already:
 		access_token = exchange_token(shop, token)
 		client_id, client_secret = _app_credentials()
-		# write only the fields the install owns: saving the whole record would also store zeros for
-		# settings it never touched (which broke the currency cache)
-		frappe.db.set_single_value(
-			"Store Connection",
-			{
-				"platform": "Shopify",
-				"store_url": shop,
-				"enabled": 1,
-				"shopify_client_id": client_id,
-				"token_expiry": add_to_date(now_datetime(), years=OFFLINE_TOKEN_YEARS),
-			},
-			None,
-		)
-		for field, value in (
-			("shopify_client_secret", client_secret),
-			("webhook_secret", client_secret),  # app webhooks are signed with the app secret
-			("access_token", access_token),
-		):
-			set_encrypted_password("Store Connection", "Store Connection", value, field)
-		frappe.clear_document_cache("Store Connection", "Store Connection")
-		frappe.db.commit()  # nosemgrep: the install must persist even if the page request later fails
-		results = register_webhooks(
-			shop, access_token, _base_url(), conn.shopify_api_version or "2026-07"
-		)
+		try:
+			# write only the fields the install owns: saving the whole record would also store zeros for
+			# settings it never touched (which broke the currency cache)
+			frappe.db.set_single_value(
+				"Store Connection",
+				{
+					"platform": "Shopify",
+					"store_url": shop,
+					"enabled": 1,
+					"shopify_client_id": client_id,
+					"token_expiry": add_to_date(now_datetime(), years=OFFLINE_TOKEN_YEARS),
+				},
+				None,
+			)
+			for field, value in (
+				("shopify_client_secret", client_secret),
+				("webhook_secret", client_secret),  # app webhooks are signed with the app secret
+				("access_token", access_token),
+			):
+				set_encrypted_password("Store Connection", "Store Connection", value, field)
+			frappe.clear_document_cache("Store Connection", "Store Connection")
+			frappe.db.commit()  # nosemgrep: the install must persist even if the page request later fails
+		except Exception:
+			frappe.db.rollback()
+			raise
+		results = register_webhooks(shop, access_token, _base_url(), conn.shopify_api_version or "2026-07")
 		_log("Success", f"Installed on {shop}", response_payload={"webhooks": results})
 	email = ensure_shop_user(shop)
 	return {"shop": shop, "user": email, "connected": True}
@@ -327,7 +339,17 @@ def _email_data_request(shop, payload):
 		parcels = frappe.get_all(
 			"COD Parcel",
 			filters={"email": email},
-			fields=["name", "order_date", "customer_name", "phone", "city", "pincode", "order_total", "payment_mode", "order_status"],
+			fields=[
+				"name",
+				"order_date",
+				"customer_name",
+				"phone",
+				"city",
+				"pincode",
+				"order_total",
+				"payment_mode",
+				"order_status",
+			],
 			order_by="order_date desc",
 			limit=100,
 		)
@@ -335,7 +357,9 @@ def _email_data_request(shop, payload):
 		"User", "Administrator", "email"
 	)
 	lines = [f"Shopify sent a customer data request for {shop}."]
-	lines.append(f"Customer: {customer.get('first_name', '')} {customer.get('last_name', '')} <{email or 'no email'}>")
+	lines.append(
+		f"Customer: {customer.get('first_name', '')} {customer.get('last_name', '')} <{email or 'no email'}>"
+	)
 	lines.append(f"Orders_customer_id: {payload.get('orders_customer_id')}")
 	lines.append(f"\nCODSync holds {len(parcels)} order(s) for this customer:")
 	for p in parcels:
@@ -388,9 +412,13 @@ def webhook():
 		payload = frappe.parse_json(raw) or {}
 	except Exception:
 		payload = {}
-	result = handle_topic(topic, shop, payload)
-	_log("Success", f"{topic} for {shop}: {result}")
-	frappe.db.commit()  # nosemgrep: webhook requests are POSTs but must persist the revoke
+	try:
+		result = handle_topic(topic, shop, payload)
+		_log("Success", f"{topic} for {shop}: {result}")
+		frappe.db.commit()  # nosemgrep: webhook requests are POSTs but must persist the revoke
+	except Exception:
+		frappe.db.rollback()
+		raise
 	return {"status": "ok"}
 
 
