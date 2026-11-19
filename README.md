@@ -4,7 +4,7 @@ CODSync is a Frappe app that reconciles Cash-on-Delivery (COD) payouts from cour
 
 ## Features
 
-- **Store connections** for Shopify, WooCommerce and Odoo to fetch orders.
+- **Shopify store connection** to fetch orders and receive signed webhooks.
 - **Courier settlements** imported from Excel files or through the API, with remittance batches and per-order lines.
 - **Automatic matching** of settlement lines to orders, with a tolerance for small differences.
 - **Reconciliation statuses**: Paid, Short-paid, Awaiting payout, Missing and Unknown.
@@ -49,7 +49,7 @@ For the dev server, log in at `http://codsync.localhost:8000/login` first so the
 codsync/
 ├── codsync/
 │   ├── doctype/       # DocTypes and their validations
-│   ├── platforms/     # Shopify, WooCommerce and Odoo connectors
+│   ├── platforms/     # Shopify adapter and credential helpers
 │   ├── report/        # Script reports
 │   ├── api.py         # Whitelisted API methods
 │   ├── ui_api.py      # API used by the web interface

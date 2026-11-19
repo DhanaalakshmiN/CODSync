@@ -1,9 +1,4 @@
-"""Platform adapter contract and the credential helper.
-
-Adapters never read platform-specific Store Connection field names directly:
-get_creds(conn) maps them to generic keys, so adding a platform never
-scatters field names outside its adapter.
-"""
+"""Shopify adapter contract and Store Connection credential helpers."""
 
 import frappe
 
@@ -44,23 +39,6 @@ def _platform_creds(conn):
 			"webhook_secret": pwd("webhook_secret"),
 			"extra": {},
 		}
-	if platform == "WooCommerce":
-		return {
-			"client_id": val("woo_consumer_key"),
-			"client_secret": pwd("woo_consumer_secret"),
-			"api_version": val("woo_api_version") or "wc/v3",
-			"webhook_secret": pwd("webhook_secret"),
-			"extra": {},
-		}
-	if platform == "Odoo":
-		return {
-			"client_id": val("odoo_username"),
-			"client_secret": None,
-			"api_key": pwd("odoo_api_key"),
-			"api_version": None,
-			"webhook_secret": None,
-			"extra": {"database": val("odoo_database"), "url": val("store_url")},
-		}
 	return {
 		"client_id": None,
 		"client_secret": None,
@@ -72,11 +50,7 @@ def _platform_creds(conn):
 
 
 class BasePlatform:
-	"""One storefront platform. Shopify is implemented; WooCommerce and Odoo follow.
-
-	Adding a platform = one adapter file + its option on the platform Selects
-	(Store Connection, COD Parcel, Sync Log).
-	"""
+	"""Contract used by the Shopify integration and its test doubles."""
 
 	name = None
 

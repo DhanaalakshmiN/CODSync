@@ -17,16 +17,6 @@
 		"col_break_shopify",
 		"shopify_client_secret",
 		"shopify_api_version",
-		"woocommerce_section",
-		"woo_consumer_key",
-		"col_break_woo",
-		"woo_consumer_secret",
-		"woo_api_version",
-		"odoo_section",
-		"odoo_database",
-		"col_break_odoo",
-		"odoo_username",
-		"odoo_api_key",
 		"webhook_section",
 		"webhook_secret",
 		"col_break_webhook",
@@ -73,8 +63,10 @@
 			"fieldname": "platform",
 			"fieldtype": "Select",
 			"label": "Platform",
-			"options": "\nShopify\nWooCommerce\nOdoo",
-			"reqd": 1
+			"options": "Shopify",
+			"reqd": 1,
+			"default": "Shopify",
+			"read_only": 1
 		},
 		{
 			"fieldname": "col_break_connection",
@@ -90,7 +82,7 @@
 			"fieldtype": "Data",
 			"label": "Store URL",
 			"reqd": 1,
-			"description": "Shopify: vanam-organics.myshopify.com · WooCommerce: https://shop.com · Odoo: https://company.odoo.com"
+			"description": "Shopify store domain, for example your-store.myshopify.com"
 		},
 		{
 			"fieldname": "store_name",
@@ -129,79 +121,15 @@
 			"depends_on": "eval:doc.platform=='Shopify'"
 		},
 		{
-			"fieldname": "woocommerce_section",
-			"fieldtype": "Section Break",
-			"label": "WooCommerce Credentials",
-			"depends_on": "eval:doc.platform=='WooCommerce'"
-		},
-		{
-			"fieldname": "woo_consumer_key",
-			"fieldtype": "Data",
-			"label": "Consumer Key",
-			"depends_on": "eval:doc.platform=='WooCommerce'",
-			"mandatory_depends_on": "eval:doc.platform=='WooCommerce'"
-		},
-		{
-			"fieldname": "col_break_woo",
-			"fieldtype": "Column Break"
-		},
-		{
-			"fieldname": "woo_consumer_secret",
-			"fieldtype": "Password",
-			"label": "Consumer Secret",
-			"depends_on": "eval:doc.platform=='WooCommerce'",
-			"mandatory_depends_on": "eval:doc.platform=='WooCommerce'"
-		},
-		{
-			"fieldname": "woo_api_version",
-			"fieldtype": "Data",
-			"label": "API Version",
-			"default": "wc/v3",
-			"depends_on": "eval:doc.platform=='WooCommerce'"
-		},
-		{
-			"fieldname": "odoo_section",
-			"fieldtype": "Section Break",
-			"label": "Odoo Credentials",
-			"depends_on": "eval:doc.platform=='Odoo'"
-		},
-		{
-			"fieldname": "odoo_database",
-			"fieldtype": "Data",
-			"label": "Database",
-			"depends_on": "eval:doc.platform=='Odoo'",
-			"mandatory_depends_on": "eval:doc.platform=='Odoo'"
-		},
-		{
-			"fieldname": "col_break_odoo",
-			"fieldtype": "Column Break"
-		},
-		{
-			"fieldname": "odoo_username",
-			"fieldtype": "Data",
-			"label": "Username",
-			"depends_on": "eval:doc.platform=='Odoo'",
-			"mandatory_depends_on": "eval:doc.platform=='Odoo'"
-		},
-		{
-			"fieldname": "odoo_api_key",
-			"fieldtype": "Password",
-			"label": "API Key",
-			"depends_on": "eval:doc.platform=='Odoo'",
-			"mandatory_depends_on": "eval:doc.platform=='Odoo'"
-		},
-		{
 			"fieldname": "webhook_section",
 			"fieldtype": "Section Break",
-			"label": "Webhook",
-			"depends_on": "eval:doc.platform!='Odoo'"
+			"label": "Webhook"
 		},
 		{
 			"fieldname": "webhook_secret",
 			"fieldtype": "Password",
 			"label": "Webhook Secret",
-			"depends_on": "eval:doc.platform!='Odoo'",
-			"description": "Shopify store-webhook signing secret or WooCommerce webhook secret"
+			"description": "Shopify store-webhook signing secret"
 		},
 		{
 			"fieldname": "col_break_webhook",
@@ -211,15 +139,13 @@
 			"fieldname": "cod_keyword",
 			"fieldtype": "Data",
 			"label": "COD Keyword",
-			"default": "cash on delivery",
-			"depends_on": "eval:doc.platform!='Odoo'"
+			"default": "cash on delivery"
 		},
 		{
 			"fieldname": "cod_tag",
 			"fieldtype": "Data",
 			"label": "COD Tag",
-			"default": "COD",
-			"depends_on": "eval:doc.platform!='Odoo'"
+			"default": "COD"
 		},
 		{
 			"fieldname": "token_section",

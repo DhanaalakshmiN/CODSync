@@ -56,8 +56,6 @@ def run_daily_order_sync():
 	try:
 		frappe.set_user("Administrator")  # nosemgrep: scheduled job, not a web request
 		conn.fetch_orders()
-	except NotImplementedError:
-		pass  # platform without order fetch (WooCommerce/Odoo stubs); already logged by the adapter
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "CODSync scheduled order sync")
 	finally:

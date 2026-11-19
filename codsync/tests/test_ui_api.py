@@ -41,9 +41,16 @@ class UiApiCase(IntegrationTestCase):
 		parcel = self.fx.make_parcel(key, expected_settlement=NET_1KG, actual_settlement=NET_1KG - 60)
 		exc = frappe.get_doc(
 			{
-				"doctype": "COD Exception", "exception_type": exc_type, "cod_parcel": parcel.name,
-				"awb": parcel.awb, "courier": self.fx.courier, "expected": NET_1KG, "actual": NET_1KG - 60,
-				"impact": -60, "status": "Open", **kw,
+				"doctype": "COD Exception",
+				"exception_type": exc_type,
+				"cod_parcel": parcel.name,
+				"awb": parcel.awb,
+				"courier": self.fx.courier,
+				"expected": NET_1KG,
+				"actual": NET_1KG - 60,
+				"impact": -60,
+				"status": "Open",
+				**kw,
 			}
 		).insert(ignore_permissions=True)
 		return parcel, exc
@@ -104,7 +111,9 @@ class TestRoleGates(UiApiCase):
 
 	def test_manager_can_change_courier_settings(self):
 		with as_role("CODSync Manager"):
-			self.assertEqual(ui_api.save_courier(self.fx.courier, {"payout_cycle_days": 9})["name"], self.fx.courier)
+			self.assertEqual(
+				ui_api.save_courier(self.fx.courier, {"payout_cycle_days": 9})["name"], self.fx.courier
+			)
 
 
 class TestCouriers(UiApiCase):
@@ -140,7 +149,9 @@ class TestCouriers(UiApiCase):
 
 	def test_update_rate_card(self):
 		ui_api.save_courier(self.fx.courier, {"base_freight": 65, "gst_percent": 12})
-		self.assertEqual(frappe.db.get_value("Courier", self.fx.courier, ["base_freight", "gst_percent"]), (65, 12))
+		self.assertEqual(
+			frappe.db.get_value("Courier", self.fx.courier, ["base_freight", "gst_percent"]), (65, 12)
+		)
 
 	def test_api_key_is_write_only_and_blank_keeps_the_saved_one(self):
 		ui_api.save_courier(self.fx.courier, {}, api_key="secret-key")
@@ -162,7 +173,9 @@ class TestTestCourier(UiApiCase):
 	prefix = "UIT"
 
 	def status(self):
-		return frappe.db.get_value("Courier", self.fx.courier, ["connection_status", "last_error"], as_dict=True)
+		return frappe.db.get_value(
+			"Courier", self.fx.courier, ["connection_status", "last_error"], as_dict=True
+		)
 
 	def use_ship24(self, key=None):
 		frappe.db.set_value("Courier", self.fx.courier, "tracking_provider", "Ship24")
@@ -176,8 +189,12 @@ class TestTestCourier(UiApiCase):
 	def test_ship24_without_a_key_needs_action(self):
 		self.use_ship24()
 		res = ui_api.test_courier(self.fx.courier)
-		self.assertEqual((res["ok"], res["message"], res["status"]), (False, "No API key saved", "Action needed"))
-		self.assertEqual(self.status(), {"connection_status": "Action needed", "last_error": "No API key saved"})
+		self.assertEqual(
+			(res["ok"], res["message"], res["status"]), (False, "No API key saved", "Action needed")
+		)
+		self.assertEqual(
+			self.status(), {"connection_status": "Action needed", "last_error": "No API key saved"}
+		)
 
 	def test_ship24_rejected_key_and_server_error(self):
 		self.use_ship24("bad")
@@ -205,7 +222,11 @@ class TestTestCourier(UiApiCase):
 	def test_each_test_writes_a_sync_log(self):
 		self.use_ship24()
 		ui_api.test_courier(self.fx.courier)
-		log = frappe.get_all("Sync Log", filters={"operation": "Test Connection", "reference_name": self.fx.courier}, fields=["status"])
+		log = frappe.get_all(
+			"Sync Log",
+			filters={"operation": "Test Connection", "reference_name": self.fx.courier},
+			fields=["status"],
+		)
 		self.assertEqual([x.status for x in log], ["Failed"])
 
 	def test_overview_banner_lists_couriers_needing_action(self):
@@ -249,11 +270,15 @@ class TestExceptionActions(UiApiCase):
 	def test_raise_dispute_uses_the_impact_as_the_claim(self):
 		_p, exc = self.make_exc("5")
 		res = ui_api.resolve_exception(exc.name, "raise_dispute", {"note": "weight"})
-		self.assertEqual((res["dispute_status"], res["claim_amount"], res["status"]), ("Raised with Courier", 60, "Open"))
+		self.assertEqual(
+			(res["dispute_status"], res["claim_amount"], res["status"]), ("Raised with Courier", 60, "Open")
+		)
 
 	def test_raise_dispute_with_custom_claim_and_rules(self):
 		_p, exc = self.make_exc("6")
-		self.assertEqual(ui_api.resolve_exception(exc.name, "raise_dispute", {"claim_amount": 25})["claim_amount"], 25)
+		self.assertEqual(
+			ui_api.resolve_exception(exc.name, "raise_dispute", {"claim_amount": 25})["claim_amount"], 25
+		)
 		with self.assertRaises(frappe.ValidationError):  # already raised
 			ui_api.resolve_exception(exc.name, "raise_dispute")
 		_p, unknown = self.make_exc("7", exc_type="Unknown AWB")
@@ -268,7 +293,9 @@ class TestExceptionActions(UiApiCase):
 		res = ui_api.resolve_exception(exc.name, "accept_deduction", {"note": "fair"})
 		self.assertEqual((res["status"], res["resolution"]), ("Resolved", "Accept deduction"))
 		parcel.reload()
-		self.assertEqual((parcel.payout_status, parcel.difference, parcel.expected_settlement), ("Paid", 0, NET_1KG - 60))
+		self.assertEqual(
+			(parcel.payout_status, parcel.difference, parcel.expected_settlement), ("Paid", 0, NET_1KG - 60)
+		)
 
 	def test_accept_deduction_not_allowed_for_other_types(self):
 		_p, exc = self.make_exc("10", exc_type="Missing settlement")
@@ -291,12 +318,17 @@ class TestExceptionActions(UiApiCase):
 	def test_resolving_closes_an_active_dispute_with_the_chosen_outcome(self):
 		_p, exc = self.make_exc("13")
 		ui_api.resolve_exception(exc.name, "raise_dispute")
-		res = ui_api.resolve_exception(exc.name, "resolve_manually", {"note": "courier refused", "dispute_outcome": "Rejected"})
+		res = ui_api.resolve_exception(
+			exc.name, "resolve_manually", {"note": "courier refused", "dispute_outcome": "Rejected"}
+		)
 		self.assertEqual((res["status"], res["dispute_status"]), ("Resolved", "Rejected"))
 
 	def test_assign_checks_the_user(self):
 		_p, exc = self.make_exc("14")
-		self.assertEqual(ui_api.resolve_exception(exc.name, "assign", {"assignee": "Administrator"})["assignee"], "Administrator")
+		self.assertEqual(
+			ui_api.resolve_exception(exc.name, "assign", {"assignee": "Administrator"})["assignee"],
+			"Administrator",
+		)
 		self.assertIsNone(ui_api.resolve_exception(exc.name, "assign", {"assignee": ""})["assignee"])
 		with self.assertRaises(frappe.ValidationError):
 			ui_api.resolve_exception(exc.name, "assign", {"assignee": "nobody@nowhere.invalid"})
@@ -311,7 +343,10 @@ class TestExceptionActions(UiApiCase):
 	def test_set_dispute_stage_and_send_claim_checks(self):
 		_p, exc = self.make_exc("16")
 		ui_api.resolve_exception(exc.name, "raise_dispute")
-		with patch("codsync.codsync.disputes.frappe.sendmail"), patch("codsync.codsync.disputes._require_outgoing_email"):
+		with (
+			patch("codsync.codsync.disputes.frappe.sendmail"),
+			patch("codsync.codsync.disputes._require_outgoing_email"),
+		):
 			frappe.db.set_value("Courier", self.fx.courier, "claims_email", "claims@example.com")
 			res = ui_api.send_claim([exc.name])
 		self.assertTrue(res)
@@ -324,10 +359,16 @@ class TestSettingsAndLists(UiApiCase):
 	def test_settings_never_return_secrets(self):
 		out = ui_api.settings()
 		self.assertNotIn("api_secret", str(out).lower().replace("api_secret_saved", ""))
+		self.assertEqual(out["platforms"], ["Shopify"])
+		self.assertEqual(set(out["saved"]), {"shopify_client_id", "shopify_client_secret", "webhook_secret"})
+		for field in ("woo_api_version", "odoo_database", "odoo_username"):
+			self.assertNotIn(field, out["store"])
 
 	def test_save_settings_validation(self):
 		for bad in (
 			{"platform": "Nonexistent"},
+			{"platform": "WooCommerce"},
+			{"platform": "Odoo"},
 			{"tolerance": -1},
 			{"default_payout_cycle_days": 0},
 			{"default_courier": "NoSuchCourier"},
@@ -341,7 +382,10 @@ class TestSettingsAndLists(UiApiCase):
 	def test_save_settings_tolerance_and_duplicate_mapping(self):
 		ui_api.save_settings({"tolerance": 2.5})
 		self.assertEqual(frappe.db.get_single_value("Store Connection", "tolerance"), 2.5)
-		dup = [{"source_name": "Same", "courier": self.fx.courier}, {"source_name": "same", "courier": self.fx.courier}]
+		dup = [
+			{"source_name": "Same", "courier": self.fx.courier},
+			{"source_name": "same", "courier": self.fx.courier},
+		]
 		with self.assertRaises(frappe.ValidationError):
 			ui_api.save_settings({"courier_mapping": dup})
 

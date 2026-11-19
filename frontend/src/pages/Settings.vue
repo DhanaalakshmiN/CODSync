@@ -48,21 +48,10 @@ const dirty = computed(
 	() =>
 		!!form.value && (snapshot() !== orig.value || Object.values(secrets.value).some((v) => v))
 );
-const platform = computed(() => form.value?.platform);
-const SECRET_LABELS = {
-	Shopify: [
-		["shopify_client_id", "Client ID"],
-		["shopify_client_secret", "Client secret"],
-	],
-	WooCommerce: [
-		["woo_consumer_key", "Consumer key"],
-		["woo_consumer_secret", "Consumer secret"],
-	],
-	Odoo: [["odoo_api_key", "API key"]],
-};
-const versionField = computed(
-	() => ({ Shopify: "shopify_api_version", WooCommerce: "woo_api_version" }[platform.value])
-);
+const SECRET_LABELS = [
+	["shopify_client_id", "Client ID"],
+	["shopify_client_secret", "Client secret"],
+];
 const canEdit = computed(() => s.value?.can_edit);
 
 const discard = () => apply(s.value && { ...s.value });
@@ -231,21 +220,13 @@ const blocked = computed(() => dirty.value || !!busy.value || fetching.value);
 					<div class="setl">
 						<h3>Store connection</h3>
 						<p>
-							The store COD orders come from. Credentials are write-only: they are
+							The Shopify store COD orders come from. Credentials are write-only: they are
 							never shown again after saving.
 						</p>
 					</div>
 					<section class="card">
 						<div class="setgrid">
-							<label
-								><span class="lab2">Platform</span
-								><SelectField
-									v-model="form.platform"
-									:options="s.platforms"
-									:disabled="!canEdit"
-									aria-label="Platform"
-									style="max-width: none"
-							/></label>
+							<div><span class="lab2">Platform</span><p>Shopify</p></div>
 							<label class="chk" style="align-self: end; min-height: 32px"
 								><input
 									v-model="form.enabled"
@@ -266,24 +247,8 @@ const blocked = computed(() => dirty.value || !!busy.value || fetching.value);
 								><span class="lab2">Store name</span
 								><input v-model="form.store_name" class="inp" :disabled="!canEdit"
 							/></label>
-							<template v-if="platform === 'Odoo'">
-								<label
-									><span class="lab2">Database</span
-									><input
-										v-model="form.odoo_database"
-										class="inp"
-										:disabled="!canEdit"
-								/></label>
-								<label
-									><span class="lab2">Username</span
-									><input
-										v-model="form.odoo_username"
-										class="inp"
-										:disabled="!canEdit"
-								/></label>
-							</template>
 							<label
-								v-for="[key, label] in SECRET_LABELS[platform] || []"
+								v-for="[key, label] in SECRET_LABELS"
 								:key="key"
 							>
 								<span class="lab2"
@@ -301,10 +266,10 @@ const blocked = computed(() => dirty.value || !!busy.value || fetching.value);
 									:disabled="!canEdit"
 								/>
 							</label>
-							<label v-if="versionField"
+							<label
 								><span class="lab2">API version</span
 								><input
-									v-model="form[versionField]"
+									v-model="form.shopify_api_version"
 									class="inp"
 									:disabled="!canEdit"
 							/></label>
