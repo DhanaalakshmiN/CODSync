@@ -757,7 +757,7 @@ def _settlement_block(p, doc, line):
 
 def _order_url(doc):
 	"""Link to the order on its platform, derived from platform + external_id."""
-	if doc.platform in ("Shopify", "WooCommerce", "Odoo") and doc.external_id:
+	if doc.platform == "Shopify" and doc.external_id:
 		conn = frappe.get_cached_doc("Store Connection")
 		try:
 			return get_platform(doc.platform).order_url(doc.external_id, conn)
@@ -1919,15 +1919,12 @@ def _match(exc, p):
 # ---------------------------------------------------------------------------
 
 SETTINGS_MANAGERS = ("CODSync Manager", "System Manager")
-PLATFORMS = ("Shopify", "WooCommerce", "Odoo")
+PLATFORMS = ("Shopify",)
 # plain fields that save_settings may change
 SETTINGS_TEXT = (
 	"store_url",
 	"store_name",
 	"shopify_api_version",
-	"woo_api_version",
-	"odoo_database",
-	"odoo_username",
 	"cod_keyword",
 	"cod_tag",
 	"default_courier",
@@ -1936,9 +1933,6 @@ SETTINGS_TEXT = (
 SECRET_FIELDS = (
 	"shopify_client_id",
 	"shopify_client_secret",
-	"woo_consumer_key",
-	"woo_consumer_secret",
-	"odoo_api_key",
 	"webhook_secret",
 )
 FETCH_FLAG = "codsync_fetching_orders"
@@ -1967,9 +1961,6 @@ def settings():
 			"store_url": doc.store_url,
 			"store_name": doc.store_name,
 			"shopify_api_version": doc.shopify_api_version,
-			"woo_api_version": doc.woo_api_version,
-			"odoo_database": doc.odoo_database,
-			"odoo_username": doc.odoo_username,
 			"cod_keyword": doc.cod_keyword,
 			"cod_tag": doc.cod_tag,
 			"default_courier": doc.default_courier,
@@ -1977,11 +1968,7 @@ def settings():
 			"default_payout_cycle_days": cint(doc.default_payout_cycle_days),
 		},
 		"saved": {
-			f: (
-				_is_saved(doc, f)
-				if f in ("shopify_client_secret", "woo_consumer_secret", "odoo_api_key", "webhook_secret")
-				else bool(doc.get(f))
-			)
+			f: (_is_saved(doc, f) if f in ("shopify_client_secret", "webhook_secret") else bool(doc.get(f)))
 			for f in SECRET_FIELDS
 		},
 		"courier_mapping": [

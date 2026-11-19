@@ -81,7 +81,7 @@
    "fieldname": "platform",
    "fieldtype": "Select",
    "label": "Platform",
-   "options": "\nShopify\nWooCommerce\nOdoo\nExcel\nManual",
+   "options": "\nShopify\nExcel\nManual",
    "in_standard_filter": 1
   },
   {
