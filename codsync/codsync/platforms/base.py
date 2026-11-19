@@ -6,7 +6,6 @@ scatters field names outside its adapter.
 """
 
 import frappe
-from frappe import _
 
 
 def get_creds(conn):

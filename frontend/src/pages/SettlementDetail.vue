@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { ArrowLeftRight, Download } from "lucide-vue-next";
+import { ArrowLeftRight, Check, Copy, Download } from "lucide-vue-next";
 import { api, call, download } from "../api";
 import { batchKind, num, rs } from "../format";
 import { toast } from "../store";
@@ -44,6 +44,34 @@ const counts = computed(() => {
 	});
 	return c;
 });
+// Summary-card tone for the Difference tile: red for shortfalls, green at zero,
+// neutral for positive (matches the app's .neg / .pos tokens).
+const diffTone = computed(() => {
+	const x = d.value?.totals?.difference;
+	if (x === null || x === undefined || x === "") return "neutral";
+	if (x < 0) return "diff-neg";
+	if (x === 0) return "diff-zero";
+	return "neutral";
+});
+// Copy the UTR to the clipboard (same pattern as Settings > webhook URL).
+const copiedUtr = ref(false);
+const copyUtr = async () => {
+	const text = d.value?.utr || "";
+	if (!text) return;
+	try {
+		await navigator.clipboard.writeText(text);
+	} catch (e) {
+		const t = document.createElement("textarea");
+		t.value = text;
+		document.body.appendChild(t);
+		t.select();
+		document.execCommand("copy");
+		t.remove();
+	}
+	copiedUtr.value = true;
+	toast("UTR copied");
+	setTimeout(() => (copiedUtr.value = false), 2000);
+};
 
 const columns = [
 	{ key: "row_no", label: "#" },
@@ -108,46 +136,57 @@ const downloadCsv = async () => {
 					</div>
 				</div>
 
-				<section class="card" aria-label="Batch summary">
-					<dl class="kvl cols" style="padding: 16px">
-						<div>
-							<dt>Courier</dt>
-							<dd>{{ d.courier }}</dd>
+				<section
+					class="card sm-summary"
+					:class="'sm-' + (batchKind(d.status) || 'none')"
+					aria-label="Batch summary"
+				>
+					<div class="sm-meta">
+						<span class="sm-chip"
+							><span class="sm-chip-l">Courier</span>{{ d.courier }}</span
+						>
+						<span class="sm-chip"
+							><span class="sm-chip-l">Date</span>{{ d.date || "—" }}</span
+						>
+						<span class="sm-chip">
+							<span class="sm-chip-l">UTR</span>
+							<span v-if="d.utr" class="sm-utr">{{ d.utr }}</span
+							><span v-else class="muted">—</span>
+							<button
+								v-if="d.utr"
+								class="sm-copy"
+								type="button"
+								aria-label="Copy UTR"
+								:title="'Copy UTR'"
+								@click="copyUtr"
+							>
+								<Copy v-if="!copiedUtr" :size="13" :stroke-width="1.8" />
+								<Check v-else :size="13" :stroke-width="2.2" />
+							</button>
+						</span>
+					</div>
+					<div class="kpis sm-kpis">
+						<div class="sm-tile">
+							<span class="sm-l">Orders</span>
+							<span class="sm-v num">{{ num(d.orders) }}</span>
 						</div>
-						<div>
-							<dt>Date</dt>
-							<dd>{{ d.date || "—" }}</dd>
+						<div class="sm-tile">
+							<span class="sm-l">Gross COD</span>
+							<span class="sm-v num">{{ rs(d.totals.cod) }}</span>
 						</div>
-						<div>
-							<dt>UTR</dt>
-							<dd>
-								<span v-if="d.utr" class="mono">{{ d.utr }}</span
-								><span v-else class="muted">—</span>
-							</dd>
+						<div class="sm-tile amber">
+							<span class="sm-l">Deductions</span>
+							<span class="sm-v num">{{ rs(d.totals.deductions) }}</span>
 						</div>
-						<div>
-							<dt>Orders</dt>
-							<dd>{{ num(d.orders) }}</dd>
+						<div class="sm-tile green">
+							<span class="sm-l">Net paid</span>
+							<span class="sm-v num">{{ rs(d.totals.net) }}</span>
 						</div>
-						<div>
-							<dt>Gross COD</dt>
-							<dd>{{ rs(d.totals.cod) }}</dd>
+						<div class="sm-tile" :class="diffTone">
+							<span class="sm-l">Difference</span>
+							<span class="sm-v num">{{ rs(d.totals.difference) }}</span>
 						</div>
-						<div>
-							<dt>Deductions</dt>
-							<dd>{{ rs(d.totals.deductions) }}</dd>
-						</div>
-						<div>
-							<dt>Net paid</dt>
-							<dd>{{ rs(d.totals.net) }}</dd>
-						</div>
-						<div>
-							<dt>Difference</dt>
-							<dd :class="{ neg: d.totals.difference < 0 }">
-								{{ rs(d.totals.difference) }}
-							</dd>
-						</div>
-					</dl>
+					</div>
 				</section>
 
 				<section class="card">
@@ -208,3 +247,103 @@ const downloadCsv = async () => {
 		</PageState>
 	</div>
 </template>
+
+<style scoped>
+/* Summary card: thin status accent matching the batch badge (ok/mis/pend). */
+.sm-summary { position: relative; }
+.sm-summary::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: rgb(174, 180, 189); /* neutral slate for unknown/other status */
+}
+.sm-ok::before { background: rgb(14, 122, 95); } /* Matched / Reconciled */
+.sm-mis::before { background: rgb(180, 35, 24); } /* Mismatch */
+.sm-pend::before { background: rgb(232, 116, 59); } /* Pending review */
+
+/* Meta strip: small pills for Courier / Date / UTR (mono + copy). */
+.sm-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 16px 16px 12px;
+}
+.sm-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: rgb(244, 245, 247);
+	font-size: 12px;
+	font-weight: 500;
+	color: rgb(48, 54, 63);
+	white-space: nowrap;
+}
+.sm-chip-l {
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: rgb(92, 100, 112);
+}
+.sm-utr {
+	font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+	font-size: 12px;
+}
+.sm-copy {
+	display: grid;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	border-radius: 6px;
+	background: transparent;
+	color: rgb(92, 100, 112);
+	cursor: pointer;
+}
+.sm-copy:hover { background: rgb(232, 233, 236); color: rgb(20, 23, 28); }
+
+/* KPI tiles: tinted background + colored left border per metric. */
+.sm-kpis { gap: 10px; padding: 4px 16px 16px; }
+.sm-tile {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 14px 16px;
+	border-radius: 10px;
+	background: rgb(244, 245, 247); /* neutral */
+	border-left: 4px solid rgb(174, 180, 189);
+}
+.sm-tile.amber { background: rgb(255, 248, 230); border-left-color: rgb(232, 116, 59); }
+.sm-tile.green { background: rgb(234, 247, 240); border-left-color: rgb(31, 157, 115); }
+.sm-tile.diff-neg { background: rgb(255, 240, 236); border-left-color: rgb(180, 35, 24); }
+.sm-tile.diff-neg .sm-v { color: rgb(180, 35, 24); font-weight: 700; }
+.sm-tile.diff-zero { background: rgb(234, 247, 240); border-left-color: rgb(31, 157, 115); }
+.sm-tile.diff-zero .sm-v { color: rgb(12, 91, 63); font-weight: 700; }
+.sm-l {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: rgb(92, 100, 112);
+}
+.sm-v {
+	margin-top: 2px;
+	font-size: 20px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+@media (max-width: 640px) {
+	.sm-meta { padding: 14px 12px 10px; }
+	.sm-kpis { padding: 2px 12px 12px; gap: 8px; }
+	.sm-tile { padding: 12px 14px; }
+}
+</style>

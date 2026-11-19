@@ -4,7 +4,6 @@ Adding a provider = one file here + its option on Store Connection.rate_provider
 "Manual" is not a provider: it means "use only Currency Rate rows".
 """
 
-from codsync.codsync.rate_providers.base import BaseRateProvider, ProviderError
 from codsync.codsync.rate_providers.frankfurter import FrankfurterProvider
 from codsync.codsync.rate_providers.open_er_api import OpenErApiProvider
 

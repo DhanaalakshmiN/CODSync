@@ -2,7 +2,7 @@ import datetime
 
 import frappe
 from frappe import _
-from frappe.utils import add_to_date, get_datetime, now_datetime
+from frappe.utils import add_to_date, now_datetime
 
 
 class NotSupported(Exception):
@@ -219,7 +219,7 @@ def update_parcel_tracking(parcel: str):
 	if doc.tracking_events:
 		last = doc.tracking_events[-1]
 		doc.last_event, doc.last_event_at = last.status, last.event_time
-	doc.save(ignore_permissions=True)
+	doc.save()
 	if doc.courier:
 		frappe.db.set_value("Courier", doc.courier, "last_tracking_sync", now_datetime())
 

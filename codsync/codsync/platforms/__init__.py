@@ -9,7 +9,6 @@ stubs that raise NotImplementedError until they are built.
 import frappe
 from frappe import _
 
-from codsync.codsync.platforms.base import BasePlatform, get_creds
 from codsync.codsync.platforms.odoo import OdooPlatform
 from codsync.codsync.platforms.shopify import ShopifyPlatform
 from codsync.codsync.platforms.woocommerce import WooCommercePlatform

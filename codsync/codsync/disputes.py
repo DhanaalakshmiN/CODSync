@@ -122,7 +122,15 @@ def _csv(rows):
 	w.writerow(["AWB", "Order", "Settlement batch", "Expected", "Received", "Claim", "Reason"])
 	for e in rows:
 		w.writerow(
-			[e.awb, e.cod_parcel, e.settlement_batch, e.expected, e.actual, _claim_amount(e), e.detail or e.exception_type]
+			[
+				e.awb,
+				e.cod_parcel,
+				e.settlement_batch,
+				e.expected,
+				e.actual,
+				_claim_amount(e),
+				e.detail or e.exception_type,
+			]
 		)
 	return buf.getvalue().encode("utf-8")
 
@@ -135,7 +143,9 @@ def build_claim(courier, rows, message=None, reminder=False):
 		intro = "This is a reminder about the claim below, which is still unresolved."
 	else:
 		subject = f"Short-payment claim: {len(rows)} shipment(s), {total:.2f}"
-		intro = "We found differences between the COD amount due and the amount settled for the shipments below."
+		intro = (
+			"We found differences between the COD amount due and the amount settled for the shipments below."
+		)
 	body = (
 		f"<p>Hello {escape_html(courier)} team,</p><p>{intro}</p>{_table(rows)}"
 		f"<p>Total claimed: <b>{total:.2f}</b>. Please review, credit the amount or send us the "
@@ -190,7 +200,7 @@ def send_claim(names, message=None):
 			exc.claim_sent_on = now_datetime()
 			exc.claim_sent_to = to
 			set_stage(exc, "Sent to courier", f"Claim emailed to {to}")
-			exc.save(ignore_permissions=True)
+			exc.save()
 			exc.add_comment("Comment", f"Claim of {_claim_amount(exc):.2f} emailed to {to}")
 		log_sync(
 			"Courier",
@@ -205,60 +215,69 @@ def send_claim(names, message=None):
 
 def send_follow_ups():
 	"""Daily: remind couriers about claims whose follow-up date has passed."""
-	from codsync.codsync.synclog import log_sync
+	try:
+		from codsync.codsync.synclog import log_sync
 
-	due = frappe.get_all(
-		"COD Exception",
-		filters={
-			"status": "Open",
-			"dispute_status": ["in", REMIND_STAGES],
-			"next_follow_up": ["<=", nowdate()],
-		},
-		pluck="name",
-	)
-	if not due:
-		return {"reminded": 0}
-	rows = [frappe.get_doc("COD Exception", n) for n in due]
-	count = 0
-	for courier, group in _by_courier(rows).items():
-		try:
-			to, cc = _courier_mail(courier)
-			_require_outgoing_email()
-			mail = build_claim(courier, group, reminder=True)
-			frappe.sendmail(
-				recipients=[to],
-				cc=cc,
-				subject=mail["subject"],
-				message=mail["message"],
-				attachments=[{"fname": f"claim-{courier}-{nowdate()}.csv", "fcontent": _csv(group)}],
-				reference_doctype="COD Exception",
-				reference_name=group[0].name,
+		due = frappe.get_all(
+			"COD Exception",
+			filters={
+				"status": "Open",
+				"dispute_status": ["in", REMIND_STAGES],
+				"next_follow_up": ["<=", nowdate()],
+			},
+			pluck="name",
+		)
+		if not due:
+			return {"reminded": 0}
+		rows = [frappe.get_doc("COD Exception", n) for n in due]
+		count = 0
+		for courier, group in _by_courier(rows).items():
+			try:
+				to, cc = _courier_mail(courier)
+				_require_outgoing_email()
+				mail = build_claim(courier, group, reminder=True)
+				frappe.sendmail(
+					recipients=[to],
+					cc=cc,
+					subject=mail["subject"],
+					message=mail["message"],
+					attachments=[{"fname": f"claim-{courier}-{nowdate()}.csv", "fcontent": _csv(group)}],
+					reference_doctype="COD Exception",
+					reference_name=group[0].name,
+				)
+			except Exception as e:
+				log_sync("Courier", "Dispute", "Failed", error_message=f"Reminder to {courier}: {e}")
+				continue
+			for exc in group:
+				exc.next_follow_up = add_days(nowdate(), follow_up_days())
+				exc.last_reminder_on = nowdate()
+				exc.append(
+					"stage_log",
+					{
+						"stage": exc.dispute_status,
+						"changed_on": now_datetime(),
+						"changed_by": "Administrator",
+						"note": f"Reminder emailed to {to}",
+					},
+				)
+				exc.save()
+			count += len(group)
+			log_sync(
+				"Courier",
+				"Dispute",
+				"Success",
+				error_message=f"Reminder for {len(group)} claim(s) sent to {courier}",
 			)
-		except Exception as e:
-			log_sync("Courier", "Dispute", "Failed", error_message=f"Reminder to {courier}: {e}")
-			continue
-		for exc in group:
-			exc.next_follow_up = add_days(nowdate(), follow_up_days())
-			exc.last_reminder_on = nowdate()
-			exc.append(
-				"stage_log",
-				{
-					"stage": exc.dispute_status,
-					"changed_on": now_datetime(),
-					"changed_by": "Administrator",
-					"note": f"Reminder emailed to {to}",
-				},
-			)
-			exc.save(ignore_permissions=True)
-		count += len(group)
-		log_sync("Courier", "Dispute", "Success", error_message=f"Reminder for {len(group)} claim(s) sent to {courier}")
-	return {"reminded": count}
+		return {"reminded": count}
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "CODSync dispute follow-ups")
+		raise
 
 
 def is_overdue(exc):
 	return bool(
 		exc.status == "Open"
-		and exc.dispute_status in REMIND_STAGES + ("Raised with Courier",)
+		and exc.dispute_status in (*REMIND_STAGES, "Raised with Courier")
 		and exc.next_follow_up
 		and getdate(exc.next_follow_up) < getdate(nowdate())
 	)
@@ -300,10 +319,11 @@ def apply_refund(exc, line, parcel):
 		exc.resolution_note = f"Refund of {recovered:.2f} received in {batch}"
 	else:
 		set_stage(exc, "Partly accepted", f"{amount:.2f} of {target:.2f} received in {batch}")
-	exc.save(ignore_permissions=True)
+	exc.save()
 	exc.add_comment(
 		"Comment",
-		f"Refund of {amount:.2f} received in {batch}" + ("" if full else f" ({recovered:.2f} of {target:.2f} so far)"),
+		f"Refund of {amount:.2f} received in {batch}"
+		+ ("" if full else f" ({recovered:.2f} of {target:.2f} so far)"),
 	)
 	return {"refunded": full, "amount": amount}
 
@@ -323,4 +343,4 @@ def close_on_settlement(parcel, amount, batch):
 		exc = frappe.get_doc("COD Exception", name)
 		exc.recovered_amount = flt(amount)
 		set_stage(exc, "Refunded", f"Settlement of {flt(amount):.2f} received in {batch}")
-		exc.save(ignore_permissions=True)
+		exc.save()

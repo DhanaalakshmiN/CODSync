@@ -116,9 +116,11 @@ def _upsert_order(values, conn):
 				parcel.declared_weight = declared_weight
 
 	if existed:
-		parcel.save(ignore_permissions=True)
+		parcel.save(
+			ignore_permissions=True
+		)  # nosemgrep: worker receives verified webhook data or manager-only sync
 	else:
-		parcel.insert(ignore_permissions=True)
+		parcel.insert(ignore_permissions=True)  # nosemgrep: verified webhook worker can run as Guest
 	frappe.db.set_single_value("Store Connection", "last_synced_on", now_datetime())
 
 
@@ -133,7 +135,7 @@ def _resolve_courier(source_name, conn):
 	if source_name:
 		if not frappe.db.exists("Courier", source_name):
 			frappe.get_doc({"doctype": "Courier", "courier_name": source_name}).insert(
-				ignore_permissions=True
+				ignore_permissions=True  # nosemgrep: internal courier mapping for verified webhook ingestion
 			)
 		return source_name
 	frappe.throw(_("Cannot determine courier for order"))

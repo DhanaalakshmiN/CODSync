@@ -18,7 +18,6 @@ from frappe.utils import (
 	flt,
 	get_datetime,
 	getdate,
-	now_datetime,
 	nowdate,
 	pretty_date,
 )
@@ -79,6 +78,14 @@ def _json(value, default=None):
 		except ValueError:
 			return default
 	return value if value is not None else default
+
+
+def _list_filters(filters, legacy_filters, fields):
+	"""Accept grouped filters and existing keyword filters; explicit keywords take precedence."""
+	values = {} if filters is None else _json(filters)
+	if not isinstance(values, dict):
+		frappe.throw(_("Filters must be an object"))
+	return frappe._dict({field: legacy_filters.get(field, values.get(field)) for field in fields})
 
 
 def _sort_key(value):
@@ -635,33 +642,36 @@ def _order_row(p):
 @frappe.whitelist()
 def orders(
 	tab: str = "All",
-	courier: str | None = None,
-	delivery_status: str | None = None,
-	cod_status: str | None = None,
-	reconciliation: str | None = None,
-	from_date: str | None = None,
-	to_date: str | None = None,
+	*,
+	filters: dict | str | None = None,
 	search: str | None = None,
 	sort: str = "date desc",
 	page: int = 1,
 	page_size: int = 20,
+	**legacy_filters,
 ):
+	"""List orders with grouped filters; existing filter keywords remain supported."""
 	_read()
-	rows = _orders(courier, since=from_date, until=to_date)
-	if delivery_status:
-		rows = [p for p in rows if p.delivery_status == delivery_status]
-	if cod_status:
-		rows = [p for p in rows if p.cod_status == cod_status]
-	if reconciliation:
-		rows = [p for p in rows if p.reconciliation_status == reconciliation]
+	f = _list_filters(
+		filters,
+		legacy_filters,
+		("courier", "delivery_status", "cod_status", "reconciliation", "from_date", "to_date"),
+	)
+	rows = _orders(f.courier, since=f.from_date, until=f.to_date)
+	if f.delivery_status:
+		rows = [p for p in rows if p.delivery_status == f.delivery_status]
+	if f.cod_status:
+		rows = [p for p in rows if p.cod_status == f.cod_status]
+	if f.reconciliation:
+		rows = [p for p in rows if p.reconciliation_status == f.reconciliation]
 
 	tabs = {
 		"All": lambda p: True,
 		"COD": _is_cod,
 		"Prepaid": lambda p: not _is_cod(p),
-		"Unreconciled": lambda p: _is_cod(p)
-		and p.reconciliation_status != "Reconciled"
-		and p.delivery_status != "Cancelled",
+		"Unreconciled": lambda p: (
+			_is_cod(p) and p.reconciliation_status != "Reconciled" and p.delivery_status != "Cancelled"
+		),
 		"Exceptions": lambda p: p.reconciliation_status == "Exception",
 	}
 	counts = {name: len([p for p in rows if fn(p)]) for name, fn in tabs.items()}
@@ -934,7 +944,7 @@ def resolve_order(order_id: str, note: str | None = None):
 		exc.resolution = exc.resolution or "Resolved manually"
 		if note:
 			exc.resolution_note = note
-		exc.save(ignore_permissions=True)
+		exc.save()
 	engine.add_note(order_id, _("Marked resolved ({0})").format(", ".join(names)))
 	return {"resolved": names}
 
@@ -1079,24 +1089,25 @@ def remittance_batches():
 @frappe.whitelist()
 def reconciliation(
 	status: str = "All",
-	courier: str | None = None,
-	batch: str | None = None,
-	difference_not_zero: int = 0,
-	parcels: list | str | None = None,
+	*,
+	filters: dict | str | None = None,
 	search: str | None = None,
 	sort: str = "order_id desc",
 	page: int = 1,
 	page_size: int = 12,
+	**legacy_filters,
 ):
-	"""Reconciliation table: COD parcels with expected vs actual settlement. `parcels`
-	(a list or comma-separated order ids) restricts the table to those orders."""
+	"""Reconciliation table with grouped filters or existing filter keywords.
+	`parcels` (a list or comma-separated order ids) restricts the table to those orders.
+	"""
 	_read()
-	base = [p for p in _orders(courier) if _is_cod(p) and p.delivery_status != "Cancelled"]
-	if batch:
-		base = [p for p in base if p.settlement_batch == batch]
-	if cint(difference_not_zero):
+	f = _list_filters(filters, legacy_filters, ("courier", "batch", "difference_not_zero", "parcels"))
+	base = [p for p in _orders(f.courier) if _is_cod(p) and p.delivery_status != "Cancelled"]
+	if f.batch:
+		base = [p for p in base if p.settlement_batch == f.batch]
+	if cint(f.difference_not_zero):
 		base = [p for p in base if abs(flt(p.difference)) > 0]
-	ids = _json(parcels)
+	ids = _json(f.parcels)
 	if isinstance(ids, str):
 		ids = [x.strip() for x in ids.split(",") if x.strip()]
 	if ids:
@@ -1745,7 +1756,7 @@ def set_dispute_stage(
 	if claim_reference:
 		exc.claim_reference = claim_reference
 	disputes.set_stage(exc, stage, note, agreed_amount)
-	exc.save(ignore_permissions=True)
+	exc.save()
 	_log_exc(exc, f"Dispute stage: {stage}" + (f". {note}" if note else ""))
 	return {"name": exc.name, "dispute_status": exc.dispute_status, "stage": _stage(exc)}
 
@@ -1762,7 +1773,7 @@ def _finish(exc, resolution, note):
 	exc.resolution = resolution
 	if note:
 		exc.resolution_note = note
-	exc.save(ignore_permissions=True)
+	exc.save()
 
 
 @frappe.whitelist()
@@ -1796,7 +1807,7 @@ def resolve_exception(name: str, action: str, payload: dict | str | None = None)
 			disputes.set_stage(exc, "Raised with Courier", note)
 			if note:
 				exc.resolution_note = note
-			exc.save(ignore_permissions=True)
+			exc.save()
 			_log_exc(
 				exc, f"Dispute raised with courier, claim {rs_text(claim)}" + (f". {note}" if note else "")
 			)
@@ -1836,7 +1847,7 @@ def resolve_exception(name: str, action: str, payload: dict | str | None = None)
 			if user and not frappe.db.exists("User", {"name": user, "enabled": 1}):
 				frappe.throw(_("User {0} not found or disabled").format(user))
 			exc.assignee = user or None
-			exc.save(ignore_permissions=True)
+			exc.save()
 			_log_exc(exc, f"Assigned to {user}" if user else "Unassigned")
 		else:
 			frappe.throw(_("Unknown action {0}").format(action))
@@ -1976,7 +1987,9 @@ def settings():
 		"courier_mapping": [
 			{"source_name": r.source_name, "courier": r.courier} for r in doc.courier_mapping or []
 		],
-		"couriers": frappe.get_list("Courier", pluck="name", order_by="courier_name asc", limit_page_length=0),
+		"couriers": frappe.get_list(
+			"Courier", pluck="name", order_by="courier_name asc", limit_page_length=0
+		),
 		"platforms": list(PLATFORMS),
 		"status": {
 			"last_test_status": doc.last_test_status,
@@ -2060,12 +2073,11 @@ def _fetch_orders_job(user):
 		frappe.set_user(user)  # nosemgrep
 		frappe.get_doc("Store Connection").fetch_orders()
 	except Exception:
-		pass  # the platform adapter already wrote the failure to Sync Log
+		frappe.log_error(frappe.get_traceback(), "CODSync background order fetch")
 	finally:
 		try:
 			frappe.cache().delete_value(FETCH_FLAG)
-			# background job: nothing else commits the sync log rows
-			frappe.db.commit()  # nosemgrep
+			# Frappe's worker commits the completed job, including Sync Log rows.
 		finally:
 			frappe.set_user(previous_user)
 

@@ -49,6 +49,8 @@ def main():
 
 	frappe.init(site=SITE, sites_path=".")
 	frappe.connect()
+	logger = frappe.logger("codsync_webhooks", allow_site=True)
+	logger.setLevel("INFO")
 	from frappe.installer import update_site_config
 
 	update_site_config("host_name", base)
@@ -73,7 +75,10 @@ def main():
 				json={"webhook": {"id": existing[topic], "address": address}},
 				timeout=30,
 			)
-			print(f"{topic}: {'updated -> ' + address if r.ok else 'FAILED ' + str(r.status_code)}")
+			if r.ok:
+				logger.info("%s: updated -> %s", topic, address)
+			else:
+				logger.error("%s: update FAILED HTTP %s", topic, r.status_code)
 		else:
 			r = rq.post(
 				f"https://{shop}/admin/api/{version}/webhooks.json",
@@ -81,9 +86,12 @@ def main():
 				json={"webhook": {"topic": topic, "format": "json", "address": address}},
 				timeout=30,
 			)
-			print(f"{topic}: {'created -> ' + address if r.ok else 'FAILED ' + str(r.status_code)}")
+			if r.ok:
+				logger.info("%s: created -> %s", topic, address)
+			else:
+				logger.error("%s: creation FAILED HTTP %s", topic, r.status_code)
+	logger.info("host_name set to %s. Done.", base)
 	frappe.destroy()
-	print(f"host_name set to {base}. Done.")
 	# reminder: the embedded app URL in Shopify Partner Dashboard (App setup) must be
 	# {base}/shopify_app - that one cannot be changed programmatically.
 
